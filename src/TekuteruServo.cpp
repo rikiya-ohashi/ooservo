@@ -65,6 +65,17 @@ void TekuteruServo::write(int32_t angle, uint8_t speed, bool wait) {
   }
 }
 
+void TekuteruServo::writeRotation(int16_t speed) {
+  speed = constrain(speed, -255, 255);
+  if (speed > 0) {
+    write(2147483647, speed);
+  } else if (speed < 0) {
+    write(-2147483648, -speed);
+  } else {
+    stop();
+  }
+}
+
 int32_t TekuteruServo::read() {
   if (_pin == 255) return POS_ERROR_VALUE;
   sendByte(CMD_START_BYTE);
@@ -142,15 +153,15 @@ bool TekuteruServo::isMoving() {
   return moving;
 }
 
+void TekuteruServo::setHold(bool hold) {
+  if (_pin == 255) return;
+  sendByte(CMD_START_BYTE);
+  sendByte(hold ? CMD_SET_HOLD_TRUE : CMD_SET_HOLD_FALSE);
+}
+
 void TekuteruServo::setZero() {
   if (_pin == 255) return;
   sendByte(CMD_START_BYTE);
   sendByte(CMD_SET_ZERO);
   delay(5);
-}
-
-void TekuteruServo::setHold(bool hold) {
-  if (_pin == 255) return;
-  sendByte(CMD_START_BYTE);
-  sendByte(hold ? CMD_SET_HOLD_TRUE : CMD_SET_HOLD_FALSE);
 }

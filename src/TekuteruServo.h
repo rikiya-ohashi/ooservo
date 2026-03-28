@@ -15,6 +15,9 @@ public:
   // Read the current angle
   int32_t read();
 
+  // 
+  void writeRotation(int16_t speed);
+
   // Stop the motor immediately
   void stop();
 
@@ -24,11 +27,11 @@ public:
   // Check if the motor is currently moving
   bool isMoving();
 
-  // Reset the current position to zero
-  void setZero();
-
   // Enable or disable position holding
   void setHold(bool hold);
+
+  // Reset the current position to zero
+  void setZero();
 
 private:
   uint8_t _pin;

@@ -1,7 +1,9 @@
-ooservo KEYWORD1
-attach KEYWORD2
-zeroing KEYWORD2
-write KEYWORD2
-wait KEYWORD2
-stop KEYWORD2
-read KEYWORD2
+TekuteruServo	KEYWORD1
+attach	KEYWORD2
+write	KEYWORD2
+read	KEYWORD2
+stop	KEYWORD2
+wait	KEYWORD2
+isMoving	KEYWORD2
+setHold	KEYWORD2
+setZero	KEYWORD2
