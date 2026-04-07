@@ -2,9 +2,9 @@
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers near-infinite rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 600 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming methods as the standard Arduino Servo library. 
+Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 600 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming methods as the standard Arduino Servo library.
 
-**Note:** This library uses a custom serial protocol. It is not a PWM-based servo library and cannot be used with standard servos like the SG90. Conversely, the standard `Servo.h` library cannot be used to control TekuteruServo..
+**Note:** This library uses a custom serial protocol. It is not a PWM-based servo library and cannot be used with standard servos like the SG90. Conversely, the standard `Servo.h` library cannot be used to control TekuteruServo.
 
 The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://tekuteru.handcrafted.jp/items/121327019)
 
@@ -29,7 +29,7 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
 * **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
-* **Volatile Rotation Count:** While the absolute angle within a single turn (0–359°) is preserved, the multi-turn rotation count resets to zero upon power-up.
+* **Rotation Count Volatility:** While the absolute angle within a single turn (0–359°) is retained, the multi-turn offset resets to zero upon power-up.
 
 
 ## Mechanical Specifications
@@ -37,12 +37,12 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
   * **Note:** The 3.3V output pins on boards like **Arduino Uno** or **ESP32-DevKitC** often provide insufficient current. Using these pins may lead to unstable operation.
 * **Logic Voltage:** 3.3V - 5V
 * **Max Speed:** 600 deg/s (approx. 0.1s/60° or 100 rpm) **at 5V**
-* **Angular Acceleration:** 5,000 deg/s²
-* **Stall Torque:** 1.8 kgf·cm **at 5V**
+* **Angular Acceleration:** 5,000 deg/s² **at 5V**
+* **Stall Torque:** 1 kgf·cm **at 5V**
 * **Communication Speed:** 9600 baud (Asynchronous Serial)
 * **Gear Material:** Plastic
 * **Dimensions:** 32.3 x 12 x 32 mm (Compatible with SG90 standard)
-* **Weight:** 10 g
+* **Weight:** 1 g
 * **Cable Length:** 24 cm
 
 
@@ -87,7 +87,7 @@ Attaches the servo to the specified pin. You can attach a servo to any available
 ---
 
 ### `write(angle)`
-Rotates to the target angle at maximum speed (600 deg/s).  
+Rotates to the target angle at maximum speed (600 deg/s).
 Upon power-up, the current position is recognized within the 0° to 359° range.
 - **`angle`**: `int32_t` (Range: `-2,147,483,648` to `2,147,483,647`)
 
@@ -95,11 +95,12 @@ Upon power-up, the current position is recognized within the 0° to 359° range.
 
 ### `write(angle, speed)`
 Rotates to the target angle at a specified speed value (0–255).
-> **Note on Voltage:** The following speed values and calculations are based on a **5V power supply**. If the supply voltage is lower (e.g., 3.3V) or the current is insufficient, the motor will not reach these speeds.
+> **Note on Voltage:** The following speed values and calculations are based on a **5V power supply**. If the supply voltage is lower (e.g., 3.3V) or the current is inadequate, the motor may not reach these rated speeds.
 
-- **0**: Stop
-- **1**: Minimum speed (6 deg/s or 1 rpm)
-- **255**: Maximum speed (600 deg/s or 100 rpm)
+`speed`: `uint8_t`
+- **`0`**: Stop
+- **`1`**: Minimum speed (6 deg/s or 1 rpm)
+- **`255`**: Maximum speed (600 deg/s or 100 rpm)
 
 **Speed Mapping Examples (at 5V):**
 To set the speed based on your preferred unit:
@@ -155,7 +156,7 @@ Immediately stops the servo at its current position.
 ---
 
 ### `wait()`
-Blocks execution until the current movement is completed.
+Blocks program execution until the current movement is completed (until the motor reaches within ±1° of the target position).
 
 ---
 
@@ -167,7 +168,7 @@ Returns `true` if the servo is currently rotating, and `false` if it is stopped.
 ---
 
 ### `setHold(hold)`
-Configures holding behavior.  
+Configures holding behavior.
 - **`true` (Default)**: Actively maintains its position against external force.
 - **`false`**: "Free move" state; allows manual rotation, though angular accuracy may decrease.
 
@@ -226,14 +227,16 @@ void loop() {
   myservo.write(540, 255);  // Move to 540 degrees with speed value 255 (max speed)
   delay(3000);
 
-  // Example: Setting speed in degrees per second [deg/s]
-  int angularVelocity = 300;  //300 [deg/s]
-  myservo.write(-180, map(angularVelocity, 6, 600, 1, 255));
+  // Set speed in degrees per second [deg/s]
+  int angularVelocity = 300;
+  int SpeedValue = map(angularVelocity, 6, 600, 1, 255);
+  myservo.write(180, SpeedValue);  // Move to 180 degrees with 300 [deg/s]
   delay(3000);
 
-  // Example: Setting speed in rotations per minute [rpm]
-  int rpm = 50;  //50 [rpm]
-  myservo.write(540, map(rpm, 1, 100, 1, 255));
+  // Set speed in rotations per minute [rpm]
+  int rpm = 50;
+  SpeedValue = map(rpm, 1, 100, 1, 255);
+  myservo.write(540, SpeedValue);  // Move to 540 degrees with 50 [rpm]
   delay(3000);
 }
 ```
@@ -249,12 +252,12 @@ void setup() {
 }
 
 void loop() {
-  myservo.write(180, 255, true);  // Move to 180 degrees, Wait for completion
+  myservo.write(180, 255, true);  // Move to 180 degrees, Wait for completion (within ±1°)
 
-  myservo.write(-180, 255, true);  // Move to -180 degrees, Wait for completion
+  myservo.write(-180, 255, true);  // Move to -180 degrees, Wait for completion (within ±1°)
 
   myservo.write(540, 255, false);  // Move to 540 degrees
-  myservo.wait();                  // Wait until myservo finishes rotating
+  myservo.wait();                  // Wait for completion (until the angle is within ±1°)
 }
 ```
 
@@ -335,16 +338,16 @@ void loop() {
   myservo.writeRotation(100);  // Rotate forward with speed value 100
   delay(3000);
 
-  myservo.writeRotation(-255);  // Rotate in reverse at max speed (approx. 100 rpm)
+  myservo.writeRotation(-255);  // Rotate in reverse at max speed (100 rpm)
   delay(3000);
 
-  // Example: Setting speed in degrees per second [deg/s]
+  // Set speed in degrees per second [deg/s]
   int AngularVelocity = 300;
-  int16_t SpeedValue = map(AngularVelocity, 6, 600, 1, 255);
+  int SpeedValue = map(AngularVelocity, 6, 600, 1, 255);
   myservo.writeRotation(SpeedValue);  // Forward at 300 [deg/s]
   delay(3000);
 
-  // Example: Setting speed in rotations per minute [rpm]
+  // Set speed in rotations per minute [rpm]
   int RPM = 50;
   SpeedValue = map(RPM, 1, 100, 1, 255);
   myservo.writeRotation(-SpeedValue);  // Reverse at 50 [rpm]
