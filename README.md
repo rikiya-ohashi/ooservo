@@ -103,9 +103,9 @@ Rotates to the target angle at a specified speed value (unit: **deg/s**).
 
 | Supply Voltage | Input Value for `speed` | Maximum Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **300** | 300 deg/s |
-| **5.0V** | **700** | 700 deg/s |
-| **7.4V** | **800** | 800 deg/s |
+| **3.3V** | **00** | 00 deg/s |
+| **5.0V** | **00** | 00 deg/s |
+| **7.4V** | **00** | 00 deg/s |
 | **8.4V** | **900** | 900 deg/s |
 
 **Note on Velocity Accuracy:**
@@ -190,7 +190,7 @@ Sets the current absolute position (0–359°) as the 0° reference point. This 
 ### `setSerialSpeed(baud)`
 Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance.
 The speed resets to **9600** when the motor's power is cycled.
-- **`baud`**: `uint32_t` (Select from: `9600`, `19200`, `38400`, `57600`)
+- **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, leading to malfunctions or failure to operate.
 
 
@@ -371,4 +371,4 @@ void loop() {
 
 ## Support & Feedback
 * **Library Design:** Inspired by the [VarSpeedServo](https://github.com/netlabtoolkit/VarSpeedServo) library.
-* **Feedback:** This documentation was prepared with the help of translation tools. If you encounter any technical issues or have suggestions for improving the documentation or English expressions, please contact us at: tekuteruteku@gmail.com
+* **Feedback:** This documentation was prepared with the help of translation tools. If you encounter any technical issues or have suggestions for improving the documentation or English expressions, please contact us at: tekuterute@gmail.com
