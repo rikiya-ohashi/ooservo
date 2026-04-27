@@ -101,7 +101,7 @@ Rotates to the target angle at a specified speed value (unit: **deg/s**).
   - **`1`**: Minimum speed (1 deg/s)
   - **`Max Value`**: The maximum speed depends on the supply voltage as follows:
 
-| Supply Voltage | Input Value for `speed` | Maximum Speed |
+| Supply Voltage | Max `speed` Value | Maximum Speed |
 | :--- | :--- | :--- |
 | **3.3V** | **00** | 00 deg/s |
 | **5.0V** | **00** | 00 deg/s |
@@ -134,7 +134,7 @@ Starts continuous rotation at a specified velocity (unit: **rpm**). The motor co
 **Maximum RPM by Voltage:**
 The maximum speed depends on the supply voltage as follows:
 
-| Supply Voltage | Max Absolute Value | Max Speed |
+| Supply Voltage | Max `speed` Value | Max Speed |
 | :--- | :--- | :--- |
 | **3.3V** | **50** | 50 rpm |
 | **5.0V** | **116** | 116 rpm |
@@ -177,7 +177,7 @@ Configures the holding behavior after the motor reaches its target position.
 - **`false`**: **Passive Mode.** Disables holding torque upon completion, allowing the shaft to be rotated manually
 
 **Note on Manual Rotation:**
-When `hold` is set to `false`, manually rotating the shaft may cause the internal multi-turn rotation count to lose synchronization. To maintain accurate position tracking during manual movement, you must **periodically call `read()`** to update the internal state.
+When `hold` is set to `false`, manually rotating the shaft may cause the multi-turn counter to drift. To maintain accurate position tracking, you must periodically call `read()` to sync the internal state.
 
 ---
 
@@ -191,7 +191,7 @@ Sets the current absolute position (0–359°) as the 0° reference point. This 
 Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance.
 The speed resets to **9600** when the motor's power is cycled.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
-- **Note:** Increasing the baud rate may cause communication errors, leading to malfunctions or failure to operate.
+- **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
 
 
 ## Code Examples
@@ -232,10 +232,10 @@ void loop() {
   myservo.write(180, 0);  // No rotation
   delay(3000);
 
-  myservo.write(-180, 600);  // Move to -180 degrees with 600 [deg/s]
+  myservo.write(-180, 600);  // Move to -180 degrees at 600 [deg/s]
   delay(3000);
 
-  myservo.write(540, 100);  // Move to 540 degrees with 100 [deg/s]
+  myservo.write(540, 100);  // Move to 540 degrees at 100 [deg/s]
   delay(3000);
 }
 ```
@@ -266,7 +266,7 @@ void loop() {
 
 TekuteruServo myservo;
 
-long currentAngle;  // Declare it as a long(int32_t) type.
+long currentAngle;  // Declare it as a long (int32_t) type.
 
 void setup() {
   Serial.begin(9600);  // Start serial communication (Set the serial monitor to 9600 baud.)
@@ -334,10 +334,10 @@ void setup() {
 }
 
 void loop() {
-  myservo.writeRotation(300);  // Rotate forward with 300 [rpm]
+  myservo.writeRotation(300);  // Rotate forward at 300 [rpm]
   delay(3000);
 
-  myservo.writeRotation(-100);  // Rotate in reverse with 100 [rpm]
+  myservo.writeRotation(-100);  // Rotate reverse at 100 [rpm]
   delay(3000);
 
   myservo.writeRotation(0);  // Stop (Same as calling stop())
