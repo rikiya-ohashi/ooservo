@@ -2,7 +2,7 @@
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers near-infinite rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 600 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming methods as the standard Arduino Servo library.
+Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 900 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming methods as the standard Arduino Servo library.
 
 > **⚠ Important Compatibility Note:** > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). Conversely, the standard `Servo.h` library cannot be used to control TekuteruServo.
 
@@ -25,7 +25,7 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
 * **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,648°) with ±1° accuracy.
 * **Familiar Interface:** It provides `attach()` and `write()` methods, ensuring **API compatibility** with the standard Arduino Servo library.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
-* **Adjustable Dynamics:** Controlled rotation speeds (6–600 deg/s) and real-time angle feedback.
+* **Adjustable Dynamics:** Controlled rotation speeds (1–900 deg/s) and real-time angle feedback.
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
 * **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
@@ -35,24 +35,32 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
 * **Operating Voltage:** 3.3V - 8.4V
   * **Note:** The 3.3V output pins on boards like **Arduino Uno** or **ESP32-DevKitC** often lack sufficient current capacity, which may lead to unstable operation.
 * **Logic Voltage:** 3.3V - 5V
-* **Max Speed:** 700 deg/s (approx. 0.1s/60° or 100 rpm) **at 5V**
-* **Angular Acceleration:** 5,000 deg/s² **at 5V**
-* **Stall Torque:** 0.8 kgf·cm **at 5V**
+* **Max Speed:** 900 deg/s (approx. 0.1s/60° or 100 rpm) **at 8.4V**
+* **Stall Torque:** 0 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (Adjustable up to 57600)
-* **Gear Material:** Plastic
-* **Dimensions:** 32.3 x 12 x 32 mm (Compatible with SG90 standard)
+* **Gear Material:** Stainless steel
+* **Dimensions:** 31.8 x 12 x 30.1 mm (Compatible with SG90 standard)
 * **Weight:** 11 g
 * **Cable Length:** 24 cm
+
+### Performance Chart
+| Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
+| :--- | :--- | :--- | :--- |
+| **3.3V** | 420 deg/s | 70 rpm | 0.5 kgf·cm |
+| **5.0V** | 700 deg/s | 116 rpm | 0.8 kgf·cm |
+| **7.4V** | 800 deg/s | 133 rpm | 1.0 kgf·cm |
+| **8.4V** | 900 deg/s | 150 rpm | 1.2 kgf·cm |
 
 
 ## ⚠ Usage Notes & Limitations
 * **Note on Power-up:** While the absolute position within a single turn (0-359°) is preserved, the multi-turn rotation counter resets to zero upon power cycle.
-* **Pin Assignment:** Each I/O pin is designed to control one motor. However, multiple motors can be controlled via a single pin for "broadcast" commands that do not require feedback, such as `write()` (with `wait=false`), `writeRotation()`, `stop()`, `setHold()`, and `setZero()`.
+* **Pin Assignment:** Each I/O pin is designed to control one motor. However, multiple motors can be controlled via a single pin for "broadcast" commands that do not require feedback, such as `write()` (with `wait=false`), `writeRotation()`, `stop()`, `setHold()`, `setZero()` and `setSerialSpeed()`.
 * **Power Stability:** Ensure a stable power supply. **Insufficient current can lead to unexpected malfunctions or erratic behavior.** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability, especially during high-torque movements.
 * **Timing & Interrupts:** * **Interrupts:** Using hardware/software interrupts in your sketch may disrupt serial communication timing, leading to **unexpected malfunctions or erratic behavior**.
 * **Magnetic Fields:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder and cause positioning errors.
-* **Handle with Care:** The internal wiring is delicate; applying excessive force or tension may cause internal damage or lead to wire breakage.
+* **Handle with Care:** The internal wiring is delicate; applying excessive force or tension may lead to wire breakage.
+
 
 ## Python Support (Raspberry Pi)
 For users looking to control TekuteruServo using **Python on Raspberry Pi**, please refer to the dedicated Python library:
@@ -334,7 +342,7 @@ void setup() {
 }
 
 void loop() {
-  myservo.writeRotation(300);  // Rotate forward at 300 [rpm]
+  myservo.writeRotation(50);  // Rotate forward at 50 [rpm]
   delay(3000);
 
   myservo.writeRotation(-100);  // Rotate reverse at 100 [rpm]
