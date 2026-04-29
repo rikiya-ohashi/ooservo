@@ -320,7 +320,7 @@ void setup() {
 
   myservo.attach(2);
 
-  currentAngle = myservo.read();  // Read the current angle (0 ≤ angle < 360)
+  currentAngle = myservo.read();  // Read the current angle (0 ≤ angle ≤ 359)
   Serial.println(currentAngle);   // Display on serial monitor
 }
 
