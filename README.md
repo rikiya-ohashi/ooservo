@@ -7,7 +7,7 @@ Key features include multi-turn positioning (±5.96 million rotations), ±1° an
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). Conversely, the standard `Servo.h` library cannot be used to control TekuteruServo.
 
-The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://tekuteru.handcrafted.jp/items/121327019)
+The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
 
 ## Table of Contents
@@ -19,12 +19,11 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
 - [Installation](#installation-arduino-ide)
 - [Class Methods](#class-methods)
 - [Code Examples](#code-examples)
-- [Support & Feedback](#support--feedback)
 
 
 ## Features
 * **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,648°) with ±1° accuracy.
-* **Arduino-Compatible Interface:** Provides `attach()` and `write()` methods that are **API-compatible** with the standard Arduino Servo library.
+* **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are **API-compatible** with the standard Arduino Servo library.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Adjustable Dynamics:** Controlled rotation speeds (1–900 deg/s) and real-time angle feedback.
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
@@ -123,7 +122,6 @@ TekuteruServo follows the standard SG90 wiring convention:
 ### `attach(pin)`
 Attaches the servo to the specified pin. You can attach a servo to any available digital I/O pin on your board.
 - **`pin`**: `uint8_t`
-- **Returns**: `void`
 
 ---
 
@@ -131,11 +129,10 @@ Attaches the servo to the specified pin. You can attach a servo to any available
 Rotates the servo to a specific target angle at maximum speed.
 Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#1-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,648` to `2,147,483,647`)
-- **Returns**: `void`
 
 ---
 
-### `write(angle, speed[deg/s])`
+### `write(angle, speed)`
 Rotates to the target angle at a specified speed value (unit: **deg/s**).
 
 - **`speed`**: Rotation speed in **deg/s** (`uint16_t`).
@@ -163,9 +160,10 @@ Rotates to the target angle with a specified speed and blocking behavior.
 - **`angle`**: Target position in degrees (`int32_t`).
 - **`speed`**: Rotation speed in **deg/s** (`uint16_t`).
 - **`wait`**: If `true`, the program blocks until the motor reaches within ±1° of the target position.
-- **Returns**: `void`
 
-### `writeRotation(speed[rpm])`
+---
+
+### `writeRotation(speed)`
 Rotates the servo continuously at a specified speed (unit: **rpm**). The motor continues to spin until a new command is issued.
 
 - **`speed`**: Rotation speed in **rpm** (`int16_t`).
@@ -186,7 +184,6 @@ The maximum speed depends on the supply voltage as follows:
 **Note on Speed Stability:**
 * **Range Limit:** It cannot rotate beyond the range of `-2,147,483,648°` to `+2,147,483,647°`.
 * **Load Handling:** If an external load causes the speed to drop, the motor maintains the specified output but will not accelerate beyond the set speed to catch up. It ensures the motor never exceeds the defined velocity.
-- **Returns**: `void`
 
 ---
 
@@ -199,13 +196,11 @@ Returns the current angle in degrees.
 
 ### `stop()`
 Immediately stops the servo at its current position.
-- **Returns**: `void`
 
 ---
 
 ### `wait()`
 Blocks program execution until the current movement is completed (until the motor reaches within ±1° of the target position).
-- **Returns**: `void`
 
 ---
 
@@ -219,18 +214,16 @@ Returns `true` if the servo is currently rotating, and `false` if it is stopped.
 ### `setHold(hold)`
 Sets whether the motor holds its position after reaching the target.
 - **`true` (Default)**: **Active Hold.** The motor actively maintains its position and resists external forces after the movement is complete.
-- **`false`**: **Passive Mode.** Disables holding torque upon completion, allowing the shaft to be rotated manually.
+- **`false`**: **Passive Mode.** Releases holding torque, allowing the shaft to be turned freely by hand.
 
 **Note on Manual Rotation:**
 When `hold` is set to `false`, manually rotating the shaft may cause the multi-turn counter to drift. To maintain accurate position tracking, you must periodically call `read()` to sync the internal state.
-- **Returns**: `void`
 
 ---
 
 ### `setZero()`
 Sets the current absolute position (0–359°) as the 0° reference point. This is saved to non-volatile memory (EEPROM/Flash) and persists after power cycles. Ongoing rotations will stop when this is called.
 **Note:** Only the absolute angle (0-359) is saved; the rotation count is reset.
-- **Returns**: `void`
 
 ---
 
@@ -239,7 +232,6 @@ Sets the communication speed. This must be called after `attach()`. If you are u
 The speed resets to **9600** when the motor's power is cycled.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
-- **Returns**: `void`
 
 
 ## Code Examples
@@ -437,4 +429,4 @@ void loop() {
 
 ## Support & Feedback
 * **Library Design:** Inspired by the [VarSpeedServo](https://github.com/netlabtoolkit/VarSpeedServo) library.
-* **Feedback:** This documentation was prepared with the help of translation tools. If you encounter any technical issues or have suggestions for improving the documentation or English expressions, please contact us at: tekuterute@gmail.com
+* **Feedback:** If you find any errors or have suggestions, please reach out at: tekuterute@gmail.com
