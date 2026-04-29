@@ -41,7 +41,7 @@ The TekuteruServo hardware can be purchased here: [Buy TekuteruServo](https://te
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (Adjustable up to 57600)
 * **Gear Material:** Stainless steel
-* **Dimensions:** 31.8 x 12 x 30.1 mm (Compatible with SG90 standard)
+* **Dimensions:** 31.8 x 12 x 30.1 mm
 * **Weight:** 11 g
 * **Lead Length:** 24 cm
 
@@ -129,7 +129,7 @@ Attaches the servo to the specified pin. You can attach a servo to any available
 
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed.
-Upon power-up, the current position is mapped to the 0°–359° range.
+Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#1-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,648` to `2,147,483,647`)
 - **Returns**: `void`
 
@@ -162,7 +162,7 @@ Rotates to the target angle with a specified speed and blocking behavior.
 
 - **`angle`**: Target position in degrees (`int32_t`).
 - **`speed`**: Rotation speed in **deg/s** (`uint16_t`).
-- **`wait`**: If `true`, the program waits until the movement is complete (within ±1°).
+- **`wait`**: If `true`, the program blocks until the motor reaches within ±1° of the target position.
 - **Returns**: `void`
 
 ### `writeRotation(speed[rpm])`
