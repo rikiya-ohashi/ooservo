@@ -1,13 +1,13 @@
-# TekuteruServo (Serial Servo)
+# TekuteruServo
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers near-infinite rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 900 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming methods as the standard Arduino Servo library.
+Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 900 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming interface as the standard Arduino Servo library.
 
 > **⚠ Important Compatibility Note:**
-> This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). Conversely, the standard `Servo.h` library cannot be used to control TekuteruServo.
+> This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
 
-The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
+**The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
 
 ## Table of Contents
@@ -22,8 +22,8 @@ The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https:
 
 
 ## Features
-* **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,648°) with ±1° accuracy.
-* **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are **API-compatible** with the standard Arduino Servo library.
+* **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,648° to +2,147,483,647°) with ±1° accuracy.
+* **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Adjustable Dynamics:** Controlled rotation speeds (1–900 deg/s) and real-time angle feedback.
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
@@ -33,9 +33,9 @@ The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https:
 
 ## Mechanical Specifications
 * **Operating Voltage:** 3.3V - 8.4V
-  * **Note:** The 3.3V output pins on boards like **Arduino Uno** or **ESP32-DevKitC** often lack sufficient current capacity, which may lead to unstable operation.
+  * **Note:** For 3.3V usage, see [Power & Signal Integrity](#3-power--signal-integrity).
 * **Logic Voltage:** 3.3V - 5V
-* **Max Speed:** 900 deg/s (approx. 0.067s/60° or 100 rpm) **at 8.4V**
+* **Max Speed:** 900 deg/s (approx. 0.067s/60° or 150 rpm) **at 8.4V**
 * **Stall Torque:** 1.2 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (Adjustable up to 57600)
@@ -47,7 +47,7 @@ The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https:
 ### Performance Chart
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
-| **3.3V** | 420 deg/s | 70 rpm | 0.5 kgf·cm |
+| **3.3V** | 600 deg/s | 70 rpm | 0.5 kgf·cm |
 | **5.0V** | 700 deg/s | 116 rpm | 0.8 kgf·cm |
 | **7.4V** | 800 deg/s | 133 rpm | 1.0 kgf·cm |
 | **8.4V** | 900 deg/s | 150 rpm | 1.2 kgf·cm |
@@ -56,12 +56,12 @@ The TekuteruServo hardware can be purchased here: [**Buy TekuteruServo**](https:
 ## ⚠ Usage Notes
 
 ### 1. Startup & Calibration (Rotational Direction at Power-up)
-At power-up, the servo detects its absolute position (0–359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the "home" position is near the cycle boundary.
+At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the "home" position is near the cycle boundary.
 
-* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the *current* cycle." To reach this, the motor will rotate **361° forward** instead of moving back 1°.
+* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the *current* cycle." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
 * **Recommended Solutions:**
     * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
-    * **Startup Logic:** Read the current position immediately after power-up and steer the servo to the nearest target.
+    * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
     ```arduino
     long currentPos = myservo.read();
     if (currentPos > 300) {
@@ -74,7 +74,7 @@ At power-up, the servo detects its absolute position (0–359°), but the multi-
 ### 2. Pin Assignment
 The wiring configuration depends on whether you need feedback from the motor.
 
-* **Single Motor per Pin:** Each I/O pin is designed to control one motor for functions that require feedback (e.g., `read()` or `wait()`).
+* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()` or `wait()`) support only one motor per I/O pin.
 * **Broadcast Control:** For commands that do not require feedback, multiple motors can be controlled via a single pin. This applies to:
   * `write()` (with `wait=false`)
   * `writeRotation()`
@@ -85,7 +85,7 @@ The wiring configuration depends on whether you need feedback from the motor.
 
 ### 3. Power & Signal Integrity
 * **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
-* **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability, especially during high-torque movements.
+* **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
 
 ### 4. Operational Constraints & Safety
 * **No Interrupts:** Using hardware/software interrupts in your sketch may disrupt serial communication timing, leading to unexpected malfunctions.
@@ -94,7 +94,7 @@ The wiring configuration depends on whether you need feedback from the motor.
 
 
 ## Python Support (Raspberry Pi)
-For users looking to control TekuteruServo using **Python on Raspberry Pi**, please refer to the dedicated Python library:
+For users who want to control TekuteruServo with Python on a Raspberry Pi, see the dedicated Python library:
 [TekuteruServo-Python](https://github.com/tekuteru/TekuteruServo-Python)
 
 
@@ -182,8 +182,9 @@ The maximum speed depends on the supply voltage as follows:
 | **8.4V** | **150** | 150 rpm |
 
 **Note on Speed Stability:**
-* **Range Limit:** It cannot rotate beyond the range of `-2,147,483,648°` to `+2,147,483,647°`.
-* **Load Handling:** If an external load causes the speed to drop, the motor maintains the specified output but will not accelerate beyond the set speed to catch up. It ensures the motor never exceeds the defined velocity.
+* **Range Limit:** The motor cannot rotate beyond the range of `-2,147,483,648°` to `+2,147,483,647°`.
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to individual hardware variances.
+* **Load Handling:** If an external load causes the speed to drop, the motor will not compensate by accelerating beyond the set speed.
 
 ---
 
@@ -216,14 +217,11 @@ Sets whether the motor holds its position after reaching the target.
 - **`true` (Default)**: **Active Hold.** The motor actively maintains its position and resists external forces after the movement is complete.
 - **`false`**: **Passive Mode.** Releases holding torque, allowing the shaft to be turned freely by hand.
 
-**Note on Manual Rotation:**
-When `hold` is set to `false`, manually rotating the shaft may cause the multi-turn counter to drift. To maintain accurate position tracking, you must periodically call `read()` to sync the internal state.
-
 ---
 
 ### `setZero()`
-Sets the current absolute position (0–359°) as the 0° reference point. This is saved to non-volatile memory (EEPROM/Flash) and persists after power cycles. Ongoing rotations will stop when this is called.
-**Note:** Only the absolute angle (0-359) is saved; the rotation count is reset.
+Sets the current absolute position (0°-359°) as the 0° reference point. This is saved to non-volatile memory (EEPROM/Flash) and persists after power cycles. Ongoing rotations will stop when this is called.
+**Note:** Only the absolute angle (0°-359°) is saved; the rotation count is reset.
 
 ---
 
@@ -333,7 +331,7 @@ void loop() {
 ```
 
 ### 5. Multiple Servos
-**Note:** When operating multiple servos simultaneously, using an external power supply is highly recommended to ensure stable operation and prevent voltage drops. **When using an external power supply, ensure that the GND of the power supply is connected to both the servos and the Arduino GND to maintain a common reference voltage.**
+**Note:** When operating multiple servos simultaneously, using an external power supply is highly recommended to ensure stable operation and prevent voltage drops. **When using an external power supply, ensure the power supply GND is connected to both the servo GND and the Arduino GND to maintain a common reference voltage.**
 
 ![Wiring Diagram](images/wiring_multiple.png)
 ```arduino
@@ -429,4 +427,4 @@ void loop() {
 
 ## Support & Feedback
 * **Library Design:** Inspired by the [VarSpeedServo](https://github.com/netlabtoolkit/VarSpeedServo) library.
-* **Feedback:** If you find any errors or have suggestions, please reach out at: tekuterute@gmail.com
+* **Feedback:** If you find any errors or have suggestions, please reach out to tekuterute@gmail.com.
