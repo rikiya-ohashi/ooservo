@@ -2,12 +2,15 @@
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers virtually unlimited rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 900 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming interface as the standard Arduino Servo library.
+Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, and real-time position feedback. It maintains the same physical dimensions, wiring, and programming interface as the standard Arduino Servo library.
+
+**The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
+
+For questions about this library, you can chat with an AI assistant via [Notebook LM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
+
 
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
-
-**The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
 
 ## Table of Contents
@@ -56,7 +59,7 @@ Key features include multi-turn positioning (±5.96 million rotations), ±1° an
 ## ⚠ Usage Notes
 
 ### 1. Startup & Calibration (Rotational Direction at Power-up)
-At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the "home" position is near the cycle boundary.
+At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
 
 * **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the *current* cycle." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
 * **Recommended Solutions:**
@@ -93,7 +96,7 @@ TekuteruServo communicates at 9600 baud by default, which introduces some **resp
 ### 5. Operational Constraints & Safety
 * **No Interrupts:** Using hardware/software interrupts in your sketch may disrupt serial communication timing, leading to unexpected malfunctions.
 * **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder.
-* **Physical Care:** The internal wiring is delicate; applying excessive force or tension may lead to wire breakage.
+* **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
 
 
 ## Python Support (Raspberry Pi)
