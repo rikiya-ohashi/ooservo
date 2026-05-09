@@ -1,6 +1,6 @@
 # TekuteruServo
 
-TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers near-infinite rotation and precise position control.
+TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers virtually unlimited rotation and precise position control.
 
 Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, adjustable speeds up to 900 deg/s, and real-time position feedback. While maintaining the same physical dimensions and wiring as the SG90, it supports the same programming interface as the standard Arduino Servo library.
 
@@ -38,7 +38,7 @@ Key features include multi-turn positioning (±5.96 million rotations), ±1° an
 * **Max Speed:** 900 deg/s (approx. 0.067s/60° or 150 rpm) **at 8.4V**
 * **Stall Torque:** 1.2 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
-* **Communication Speed:** 9600 baud by default (Adjustable up to 57600)
+* **Communication Speed:** 9600 baud by default (adjustable up to 57600 baud)
 * **Gear Material:** Stainless steel
 * **Dimensions:** 31.8 x 12 x 30.1 mm
 * **Weight:** 11 g
@@ -83,11 +83,14 @@ The wiring configuration depends on whether you need feedback from the motor.
   * `setZero()`
   * `setSerialSpeed()`
 
-### 3. Power & Signal Integrity
+### 3. Communication Latency
+TekuteruServo communicates at 9600 baud by default, which introduces some **response latency** compared to PWM-based servos or high-performance serial servos. For latency-sensitive applications, increasing the baud rate via `setSerialSpeed()` can help, though it may affect communication reliability.
+
+### 4. Power & Signal Integrity
 * **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
 * **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
 
-### 4. Operational Constraints & Safety
+### 5. Operational Constraints & Safety
 * **No Interrupts:** Using hardware/software interrupts in your sketch may disrupt serial communication timing, leading to unexpected malfunctions.
 * **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder.
 * **Physical Care:** The internal wiring is delicate; applying excessive force or tension may lead to wire breakage.
@@ -148,7 +151,7 @@ Rotates to the target angle at a specified speed value (unit: **deg/s**).
 | **8.4V** | **900** | 900 deg/s |
 
 **Note on Velocity Accuracy:**
-* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to individual hardware variances.
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Timing Variance:** Due to this variance and power supply stability, the time taken to reach the target angle may differ from theoretical calculations.
 * **Precision Control:** For tasks requiring precise long-term speed control, it is recommended to periodically send target positions to compensate for any drift.
 
@@ -226,7 +229,7 @@ Sets the current absolute position (0°-359°) as the 0° reference point. This 
 ---
 
 ### `setSerialSpeed(baud)`
-Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance.
+Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance. Ongoing rotations will stop when this is called.
 The speed resets to **9600** when the motor's power is cycled.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
@@ -331,7 +334,7 @@ void loop() {
 ```
 
 ### 5. Multiple Servos
-**Note:** When operating multiple servos simultaneously, using an external power supply is highly recommended to ensure stable operation and prevent voltage drops. **When using an external power supply, ensure the power supply GND is connected to both the servo GND and the Arduino GND to maintain a common reference voltage.**
+**Note:** When operating multiple servos simultaneously, using an external power supply is highly recommended to ensure stable operation and prevent voltage drops. **When using an external power supply, ensure the power supply GND is connected to both the servo GND and the Arduino GND to establish a common ground.**
 
 ![Wiring Diagram](images/wiring_multiple.png)
 ```arduino
