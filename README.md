@@ -6,7 +6,7 @@ Key features include multi-turn positioning (±5.96 million rotations), ±1° an
 
 **The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
-For questions about this library, you can chat with an AI assistant via [Notebook LM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
+For questions about TekuteruServo, you can chat with an AI assistant via [Notebook LM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
 
 
 > **⚠ Important Compatibility Note:**
