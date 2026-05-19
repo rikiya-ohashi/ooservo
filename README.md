@@ -28,7 +28,7 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 * **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
 * **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
-* **Adjustable Dynamics:** Controlled rotation speeds (1–900 deg/s) and real-time angle feedback.
+* **Adjustable Dynamics:** Configurable rotation speeds (1–900 deg/s) and real-time angle feedback.
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
 * **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
@@ -95,7 +95,7 @@ Since TekuteruServo uses a software-based bit-banging serial protocol on a singl
 
 * **Communication Latency:** Communicating at 9600 baud introduces some **response latency** compared to PWM-based servos or high-performance hardware serial servos. Frequent polling (e.g., calling `read()` or `isMoving()` inside a tight `loop()`) will compound this latency and continuously block system interrupts.
 
-* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed(57600)` to drastically reduce the **blocking duration**.
+* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed(57600)` to significantly reduce the **blocking duration**.
 
 ### 4. Power & Signal Integrity
 * **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
@@ -170,9 +170,9 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 ### `write(angle, speed, wait)`
 Rotates to the target angle with a specified speed and blocking behavior.
 
-- **`angle`**: Target position in degrees (`int32_t`).
-- **`speed`**: Rotation speed in **deg/s** (`uint16_t`).
-- **`wait`**: If `true`, the program blocks until the motor reaches within ±1° of the target position.
+- **`angle`**: Target position in degrees.
+- **`speed`**: Rotation speed in **deg/s**.
+- **`wait`** (`bool`): If `true`, the program blocks until the motor reaches within ±1° of the target position.
 
 ---
 
@@ -197,7 +197,7 @@ The maximum speed depends on the supply voltage as follows:
 **Note on Speed Stability:**
 * **Range Limit:** The motor cannot rotate beyond the range of `-2,147,483,647°` to `+2,147,483,647°`.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to individual hardware variances.
-* **Load Handling:** If an external load causes the speed to drop, the motor will not compensate by accelerating beyond the set speed.
+* **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to meet the target angle on time, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
 
 ---
 
@@ -227,8 +227,9 @@ Returns `true` if the servo is currently rotating, and `false` if it is stopped.
 
 ### `setHold(hold)`
 Sets whether the motor holds its position after reaching the target.
-- **`true` (Default)**: **Active Hold.** The motor actively maintains its position and resists external forces after the movement is complete.
-- **`false`**: **Passive Mode.** Releases holding torque, allowing the shaft to be turned freely by hand.
+- **`hold`** `bool`:
+  - **`true` (Default) — Active Hold:** The motor actively maintains its position and resists external forces after the movement is complete.
+  - **`false` — Passive Mode:** Releases holding torque, allowing the shaft to be turned freely by hand.
 
 ---
 
