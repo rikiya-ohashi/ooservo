@@ -89,13 +89,13 @@ The wiring configuration depends on whether you need feedback from the motor.
 ### 3. Communication Characteristics & Limitations (Latency & Interrupts)
 Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
 
-* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. This can potentially cause:
+* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication inside a tight loop will worsen this blocking. This can potentially cause:
   * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
   * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
 
-* **Communication Latency:** Communicating at 9600 baud introduces some **response latency** compared to PWM-based servos or high-performance hardware serial servos. Frequent polling (e.g., calling `read()` or `isMoving()` inside a tight `loop()`) will compound this latency and continuously block system interrupts.
+* **Communication Latency:** Communicating at 9600 baud introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
 
-* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed(57600)` to significantly reduce the **blocking duration**.
+* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed()` to reduce the **blocking duration**.
 
 ### 4. Power & Signal Integrity
 * **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
