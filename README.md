@@ -28,7 +28,7 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 * **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
 * **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
-* **Adjustable Dynamics:** Configurable rotation speeds (1–900 deg/s) and real-time angle feedback.
+* **Adjustable Dynamics:** Configurable rotation speeds (1–900 deg/s) and real-time position feedback.
 * **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
 * **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
@@ -36,10 +36,10 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 
 ## Mechanical Specifications
 * **Operating Voltage:** 3.3V - 8.4V
-  * **Note:** For 3.3V usage, see [Power & Signal Integrity](#4-power--signal-integrity).
+  * **Note:** For 3.3V usage, see [Power & Signal Integrity](#1-power--signal-integrity).
 * **Logic Voltage:** 3.3V - 5V
 * **Max Speed:** 900 deg/s (approx. 0.067s/60° or 150 rpm) **at 8.4V**
-* **Stall Torque:** 1.2 kgf·cm **at 8.4V**
+* **Stall Torque:** 2.0 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (adjustable up to 57600 baud)
 * **Gear Material:** Stainless steel
@@ -50,15 +50,35 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 ### Performance Chart
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
-| **3.3V** | 500 deg/s | 80 rpm | 0.5 kgf·cm |
-| **5.0V** | 600 deg/s | 90 rpm | 1.6 kgf·cm |
-| **7.4V** | 700 deg/s | 100 rpm | 1.8 kgf·cm |
-| **8.4V** | 800 deg/s | 110 rpm | 2.0 kgf·cm |
+| **3.3V** | 600 deg/s | 50 rpm | 0.5 kgf·cm |
+| **5.0V** | 700 deg/s | 117 rpm | 1.6 kgf·cm |
+| **7.4V** | 800 deg/s | 133 rpm | 1.8 kgf·cm |
+| **8.4V** | 900 deg/s | 150 rpm | 2.0 kgf·cm |
 
 
-## ⚠ Usage Notes
+## Usage Notes
 
-### 1. Startup & Calibration (Rotational Direction at Power-up)
+### 1. Power & Signal Integrity
+* **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
+* **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
+
+### 2. Operational Constraints & Safety
+* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder.
+* **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
+
+### 3. Pin Assignment
+The wiring configuration depends on whether you need feedback from the motor.
+
+* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()` or `wait()`) support only one motor per I/O pin.
+* **Broadcast Control:** For commands that do not require feedback, multiple motors can be controlled via a single pin. These commands support broadcast control:
+  * `write()` (with `wait=false`)
+  * `writeRotation()`
+  * `stop()`
+  * `setHold()`
+  * `setZero()`
+  * `setSerialSpeed()`
+
+### 4. Startup & Calibration (Rotational Direction at Power-up)
 At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
 
 * **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the *current* cycle." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
@@ -74,19 +94,7 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
     }
     ```
 
-### 2. Pin Assignment
-The wiring configuration depends on whether you need feedback from the motor.
-
-* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()` or `wait()`) support only one motor per I/O pin.
-* **Broadcast Control:** For commands that do not require feedback, multiple motors can be controlled via a single pin. This applies to:
-  * `write()` (with `wait=false`)
-  * `writeRotation()`
-  * `stop()`
-  * `setHold()`
-  * `setZero()`
-  * `setSerialSpeed()`
-
-### 3. Communication Characteristics & Limitations (Latency & Interrupts)
+### 5. Communication Characteristics & Limitations (Latency & Interrupts)
 Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
 
 * **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication inside a tight loop will worsen this blocking. This can potentially cause:
@@ -96,14 +104,6 @@ Since TekuteruServo uses a software-based bit-banging serial protocol on a singl
 * **Communication Latency:** Communicating at 9600 baud introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
 
 * **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed()` to reduce the **blocking duration**.
-
-### 4. Power & Signal Integrity
-* **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
-* **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
-
-### 5. Operational Constraints & Safety
-* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder.
-* **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
 
 
 ## Python Support (Raspberry Pi)
@@ -140,7 +140,7 @@ Attaches the servo to the specified pin. You can attach a servo to any available
 
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed.
-Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#1-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
+Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#4-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
 
 ---
@@ -163,7 +163,6 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 **Note on Speed Accuracy:**
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Timing Variance:** Due to this variance and power supply stability, the time taken to reach the target angle may differ from theoretical calculations.
-* **Precision Control:** For tasks requiring precise long-term speed control, it is recommended to periodically send target positions to compensate for any drift.
 
 ---
 
@@ -195,7 +194,7 @@ The maximum speed depends on the supply voltage as follows:
 | **8.4V** | **150** | 150 rpm |
 
 **Note on Speed Stability:**
-* **Range Limit:** The motor cannot rotate beyond the range of `-2,147,483,647°` to `+2,147,483,647°`.
+* **Range Limit:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to individual hardware variances.
 * **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to meet the target angle on time, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
 
@@ -228,7 +227,7 @@ Returns `true` if the servo is currently rotating, and `false` if it is stopped.
 ### `setHold(hold)`
 Sets whether the motor holds its position after reaching the target.
 - **`hold`** `bool`:
-  - **`true` (Default) — Active Hold:** The motor actively maintains its position and resists external forces after the movement is complete.
+  - **`true` — Active Hold (Default):** The motor actively maintains its position and resists external forces after the movement is complete.
   - **`false` — Passive Mode:** Releases holding torque, allowing the shaft to be turned freely by hand.
 
 ---
@@ -343,10 +342,11 @@ void loop() {
   currentAngle = myservo.read();  // Read the current angle (expected: 0±1)
   Serial.println(currentAngle);
 
-  myservo.write(3600);            // Start moving to 3600 degrees (non-blocking)
+  myservo.write(1800);            // Start moving to 1800 degrees (non-blocking)
   delay(1000);
   currentAngle = myservo.read();  // Read angle mid-rotation (motor is still moving)
   Serial.println(currentAngle);
+  myservo.wait();  // Wait until reaches 1800°
 }
 ```
 
