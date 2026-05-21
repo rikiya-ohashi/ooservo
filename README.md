@@ -97,7 +97,7 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
 ### 5. Communication Characteristics & Limitations (Latency & Interrupts)
 Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
 
-* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication inside a tight loop will worsen this blocking. This can potentially cause:
+* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
   * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
   * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
 
