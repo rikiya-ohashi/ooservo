@@ -5,7 +5,7 @@ TekuteruServo is a serial servo motor that feels just like a standard SG90 but o
 Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, and real-time position feedback. It maintains the same physical dimensions and wiring as the SG90, while providing an interface compatible with the standard Arduino Servo library.
 
 > **⚠ Important Compatibility Note:**
-> This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
+> This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard PWM servos. This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
 
 **The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
@@ -25,11 +25,12 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 ## Features
 * **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
+* **Dual-Mode Operation:** Supports both angle control and continuous rotation (speed control).
+* **Configurable Speed:** Rotation speed is adjustable from 1 to 900 deg/s.
+* **Real-Time Position Feedback:** Returns the current angle at any time via `read()`.
 * **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
-* **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
-* **Adjustable Dynamics:** Configurable rotation speeds (1–900 deg/s) and real-time position feedback.
-* **Dual-Mode Operation:** Supports both high-precision positioning (angle control) and continuous rotation (speed control).
 * **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
+* **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
 
 
@@ -49,7 +50,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ### Performance Chart
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
-| **3.3V** | 600 deg/s | 50 rpm | 0.5 kgf·cm |
+| **3.3V** | 600 deg/s | 100 rpm | 0.5 kgf·cm |
 | **5.0V** | 700 deg/s | 116 rpm | 1.6 kgf·cm |
 | **7.4V** | 800 deg/s | 133 rpm | 1.8 kgf·cm |
 | **8.4V** | 900 deg/s | 150 rpm | 2.0 kgf·cm |
@@ -112,7 +113,7 @@ For users who want to control TekuteruServo with Python on a Raspberry Pi, see t
 
 
 ## Wiring Guide
-TekuteruServo follows the standard SG90 wiring convention:
+TekuteruServo uses the same physical wiring as standard PWM servos:
 
 | Wire Color | Function | Connection      |
 |------------|----------|-----------------|
@@ -189,7 +190,7 @@ The maximum speed depends on the supply voltage as follows:
 
 | Supply Voltage | Max `speed` Value | Max Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **50** | 50 rpm |
+| **3.3V** | **100** | 100 rpm |
 | **5.0V** | **116** | 116 rpm |
 | **7.4V** | **133** | 133 rpm |
 | **8.4V** | **150** | 150 rpm |
@@ -308,7 +309,7 @@ void loop() {
   myservo.wait();            // Wait until motor reaches -180°
 
   // Non-blocking: program continues while the motor is moving
-  myservo.write(720, 600, false);       // Start moving to 720°
+  myservo.write(720, 600);       // Start moving to 720°
   while (myservo.isMoving()) {  // Do other work while the motor is moving
     // Example: LED blink
     digitalWrite(LED_BUILTIN, HIGH);
