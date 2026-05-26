@@ -2,21 +2,20 @@
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers virtually unlimited rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, and real-time position feedback. It maintains the same physical dimensions and wiring as the SG90, while providing an API-compatible interface with the standard Arduino Servo library.
-
-**The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
-
-For questions about TekuteruServo, you can chat with an AI assistant via [NotebookLM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
-
+Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, and real-time position feedback. It maintains the same physical dimensions and wiring as the SG90, while providing an interface compatible with the standard Arduino Servo library.
 
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard servos (like the SG90). This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
+
+**The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
+
+For questions about TekuteruServo, you can chat with an **AI assistant** via [NotebookLM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
 
 
 ## Table of Contents
 - [Features](#features)
 - [Mechanical Specifications](#mechanical-specifications)
-- [Usage Notes](#-usage-notes)
+- [Usage Notes](#usage-notes)
 - [Python Support (Raspberry Pi)](#python-support-raspberry-pi)
 - [Wiring Guide](#wiring-guide)
 - [Installation](#installation-arduino-ide)
@@ -51,7 +50,7 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
 | **3.3V** | 600 deg/s | 50 rpm | 0.5 kgf·cm |
-| **5.0V** | 700 deg/s | 117 rpm | 1.6 kgf·cm |
+| **5.0V** | 700 deg/s | 116 rpm | 1.6 kgf·cm |
 | **7.4V** | 800 deg/s | 133 rpm | 1.8 kgf·cm |
 | **8.4V** | 900 deg/s | 150 rpm | 2.0 kgf·cm |
 
@@ -63,13 +62,13 @@ For questions about TekuteruServo, you can chat with an AI assistant via [Notebo
 * **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
 
 ### 2. Operational Constraints & Safety
-* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-power cables), as they may interfere with the internal magnetic encoder.
+* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
 * **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
 
 ### 3. Pin Assignment
 The wiring configuration depends on whether you need feedback from the motor.
 
-* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()` or `wait()`) support only one motor per I/O pin.
+* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()`) support only one motor per I/O pin.
 * **Broadcast Control:** For commands that do not require feedback, multiple motors can be controlled via a single pin. These commands support broadcast control:
   * `write()` (with `wait=false`)
   * `writeRotation()`
@@ -77,11 +76,12 @@ The wiring configuration depends on whether you need feedback from the motor.
   * `setHold()`
   * `setZero()`
   * `setSerialSpeed()`
+* **Using `attach()` to verify the connection with multiple motors:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
 
 ### 4. Startup & Calibration (Rotational Direction at Power-up)
 At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
 
-* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the *current* cycle." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
+* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
 * **Recommended Solutions:**
     * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
     * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
@@ -135,11 +135,12 @@ TekuteruServo follows the standard SG90 wiring convention:
 ### `attach(pin)`
 Attaches the servo to the specified pin. You can attach a servo to any available digital I/O pin on your board.
 - **`pin`**: `uint8_t`
+- **Returns**: `bool` — `true` if the servo is connected and responding, `false` if a communication error occurs.
 
 ---
 
 ### `write(angle)`
-Rotates the servo to a specific target angle at maximum speed.
+Rotates the servo to a specific target angle at maximum speed (non-blocking).
 Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#4-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
 
@@ -195,7 +196,7 @@ The maximum speed depends on the supply voltage as follows:
 
 **Note on Speed Stability:**
 * **Range Limit:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
-* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to individual hardware variances.
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to meet the target angle on time, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
 
 ---
@@ -213,7 +214,7 @@ Immediately stops the servo at its current position.
 ---
 
 ### `wait()`
-Blocks program execution until the current movement is completed (until the motor reaches within ±1° of the target position).
+Blocks execution until the current movement is completed (until the motor reaches within ±1° of the target position).
 
 ---
 
@@ -239,8 +240,7 @@ Sets the current absolute position (0°-359°) as the 0° reference point. This 
 ---
 
 ### `setSerialSpeed(baud)`
-Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance. Ongoing rotations will stop when this is called.
-The speed resets to **9600** on power cycle.
+Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
 
@@ -254,7 +254,7 @@ The speed resets to **9600** on power cycle.
 TekuteruServo myservo;
 
 void setup() {
-  myservo.attach(2); // Attach to digital pin 2 (D2)
+  myservo.attach(2);  // Attach to digital pin 2 (D2)
 }
 
 void loop() {
@@ -280,7 +280,7 @@ void setup() {
 }
 
 void loop() {
-  myservo.write(180, 600);   // Move to 180 degrees at 600 deg/s
+  myservo.write(180, 600);  // Move to 180 degrees at 600 deg/s
   delay(1000);
 
   myservo.write(-180, 100);  // Move to -180 degrees at 100 deg/s
@@ -300,13 +300,16 @@ void setup() {
 }
 
 void loop() {
-  // Blocking: program waits here until the move is done
-  myservo.write(180, 600, true);   // Move to 180 degrees, wait for completion (within ±1°)
-  myservo.write(-180, 600, true);  // Move to -180 degrees, wait for completion (within ±1°)
+  // Blocking approach 1: pass true as the third argument
+  myservo.write(180, 600, true);  // Move to 180°, wait for completion (within ±1°)
+
+  // Blocking approach 2: call wait() separately
+  myservo.write(-180, 600);  // Start moving to -180°
+  myservo.wait();            // Wait until motor reaches -180°
 
   // Non-blocking: program continues while the motor is moving
-  myservo.write(720, 600, false);  // Start moving to 720 degrees (same as calling myservo.write(720, 600);)
-  while (myservo.isMoving() == true) { // Do other work while the motor is moving
+  myservo.write(720, 600, false);       // Start moving to 720°
+  while (myservo.isMoving()) {  // Do other work while the motor is moving
     // Example: LED blink
     digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
@@ -342,7 +345,7 @@ void loop() {
   currentAngle = myservo.read();  // Read the current angle (expected: 0±1)
   Serial.println(currentAngle);
 
-  myservo.write(1800);            // Start moving to 1800 degrees (non-blocking)
+  myservo.write(1800);  // Start moving to 1800 degrees (non-blocking)
   delay(1000);
   currentAngle = myservo.read();  // Read angle mid-rotation (motor is still moving)
   Serial.println(currentAngle);
@@ -367,21 +370,15 @@ void setup() {
 }
 
 void loop() {
-  // Move both servos simultaneously, then wait for both to finish
-  myservo1.write(180);
-  myservo2.write(180);
+  myservo1.write(180, 600);
+  myservo2.write(180, 600);
   myservo1.wait();  // Wait until myservo1 reaches 180°
   myservo2.wait();  // Wait until myservo2 reaches 180°
 
-  // Move both simultaneously at the same speed; they finish at roughly the same time
-  myservo1.write(-180, 300);
+  myservo1.write(-180, 600);
   myservo2.write(-180, 300);
   myservo1.wait();
   myservo2.wait();
-
-  // Move both simultaneously at different speeds
-  myservo1.write(0, 600, true);   // Fast: wait here until myservo1 finishes
-  myservo2.write(0, 100, true);   // Slow: wait here until myservo2 finishes
 }
 ```
 
@@ -396,13 +393,13 @@ void setup() {
 }
 
 void loop() {
-  myservo.writeRotation(100);   // Rotate forward at 100 rpm
+  myservo.writeRotation(100);  // Rotate forward at 100 rpm
   delay(3000);
 
   myservo.writeRotation(-50);  // Rotate in reverse at 50 rpm
   delay(3000);
 
-  myservo.writeRotation(0);    // Stop (same as calling stop())
+  myservo.writeRotation(0);  // Stop (same as calling stop())
   delay(2000);
 }
 ```
@@ -417,10 +414,6 @@ void setup() {
   Serial.begin(9600);
 
   myservo.attach(2);
-
-  myservo.setHold(false);         // Disable hold torque — shaft can be rotated manually
-  delay(3000);
-
   myservo.setZero();  // Set the current position as 0 degrees (saved to non-volatile memory)
 
   Serial.println("setZero successful");
@@ -438,8 +431,30 @@ TekuteruServo myservo;
 
 void setup() {
   myservo.attach(2);
-  myservo.setSerialSpeed(19200);  // Change communication speed to 19200 baud (options: 9600, 19200, 38400, 57600)
-                                  // Note: resets to 9600 on power cycle
+
+  // Change baud rate. Valid options: 9600, 19200, 38400, 57600
+  // Note: Resets to 9600 after each power cycle.
+  myservo.setSerialSpeed(19200);
+}
+
+void loop() {
+}
+```
+
+### 9. Connection Check
+```arduino
+#include <TekuteruServo.h>
+
+TekuteruServo myservo;
+
+void setup() {
+  Serial.begin(9600);
+
+  if (myservo.attach(2)) {
+    Serial.println("Connected");
+  } else {
+    Serial.println("Connection failed");  // No servo detected on pin 2
+  }
 }
 
 void loop() {
