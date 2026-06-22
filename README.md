@@ -38,7 +38,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 * **Operating Voltage:** 3.3V - 8.4V
   * **Note:** For 3.3V usage, see [Power & Signal Integrity](#1-power--signal-integrity).
 * **Logic Voltage:** 3.3V - 5V
-* **Max Speed:** 900 deg/s (approx. 0.067s/60° or 150 rpm) **at 8.4V**
+* **Max Speed:** 950 deg/s (approx. 0.063 s/60° or 158 rpm) **at 8.4V**
 * **Stall Torque:** 2.0 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (adjustable up to 57600 baud)
@@ -50,10 +50,11 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ### Performance Chart
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
-| **3.3V** | 600 deg/s | 100 rpm | 0.5 kgf·cm |
-| **5.0V** | 700 deg/s | 116 rpm | 1.6 kgf·cm |
-| **7.4V** | 800 deg/s | 133 rpm | 1.8 kgf·cm |
-| **8.4V** | 900 deg/s | 150 rpm | 2.0 kgf·cm |
+| **3.3V** | 420 deg/s | 70 rpm | 0 kgf·cm |
+| **5.0V** | 650 deg/s | 108 rpm | 0 kgf·cm |
+| **6.0V** | 730 deg/s | 121 rpm | 0 kgf·cm |
+| **7.4V** | 860 deg/s | 143 rpm | 0 kgf·cm |
+| **8.4V** | 950 deg/s | 158 rpm | 0 kgf·cm |
 
 
 ## Usage Notes
@@ -63,6 +64,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 * **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
 
 ### 2. Operational Constraints & Safety
+* **Heat Generation:** Prolonged continuous rotation causes the motor to heat up.
 * **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
 * **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
 
@@ -157,12 +159,14 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 
 | Supply Voltage | Max `speed` Value | Maximum Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **600** | 600 deg/s |
-| **5.0V** | **700** | 700 deg/s |
-| **7.4V** | **800** | 800 deg/s |
-| **8.4V** | **900** | 900 deg/s |
+| **3.3V** | **420** | 420 deg/s |
+| **5.0V** | **650** | 650 deg/s |
+| **6.0V** | **730** | 730 deg/s |
+| **7.4V** | **860** | 860 deg/s |
+| **8.4V** | **950** | 950 deg/s |
 
 **Note on Speed Accuracy:**
+* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Timing Variance:** Due to this variance and power supply stability, the time taken to reach the target angle may differ from theoretical calculations.
 
@@ -190,13 +194,15 @@ The maximum speed depends on the supply voltage as follows:
 
 | Supply Voltage | Max `speed` Value | Max Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **100** | 100 rpm |
-| **5.0V** | **116** | 116 rpm |
-| **7.4V** | **133** | 133 rpm |
-| **8.4V** | **150** | 150 rpm |
+| **3.3V** | **70** | 70 rpm |
+| **5.0V** | **108** | 108 rpm |
+| **6.0V** | **121** | 121 rpm |
+| **7.4V** | **143** | 143 rpm |
+| **8.4V** | **158** | 158 rpm |
 
 **Note on Speed Stability:**
 * **Range Limit:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
+* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to meet the target angle on time, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
 
