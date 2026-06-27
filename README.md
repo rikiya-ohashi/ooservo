@@ -24,12 +24,12 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 
 ## Features
-* **High-Precision Multi-turn Positioning:** Supports up to ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
+* **High-Precision Multi-turn Positioning:** Supports ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
 * **Dual-Mode Operation:** Supports both angle control and continuous rotation (speed control).
-* **Configurable Speed:** Rotation speed is adjustable from 1 to 900 deg/s.
+* **Adjustable Speed:** Rotation speed is adjustable from 1 to 950 deg/s.
 * **Real-Time Position Feedback:** Returns the current angle at any time via `read()`.
 * **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
-* **Scalable Servo Control:** No software limit on the number of servos. You can control as many as your board's available I/O pins allow.
+* **Scalable Servo Control:** No arbitrary software limit on the number of servos. The practical limit is determined by your board's available I/O pins and RAM.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
 
@@ -39,7 +39,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
   * **Note:** For 3.3V usage, see [Power & Signal Integrity](#1-power--signal-integrity).
 * **Logic Voltage:** 3.3V - 5V
 * **Max Speed:** 950 deg/s (approx. 0.063 s/60° or 158 rpm) **at 8.4V**
-* **Stall Torque:** 2.0 kgf·cm **at 8.4V**
+* **Stall Torque:** 5.0 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
 * **Communication Speed:** 9600 baud by default (adjustable up to 57600 baud)
 * **Gear Material:** Stainless steel
@@ -50,11 +50,11 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ### Performance Chart
 | Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
 | :--- | :--- | :--- | :--- |
-| **3.3V** | 420 deg/s | 70 rpm | 0 kgf·cm |
-| **5.0V** | 650 deg/s | 108 rpm | 0 kgf·cm |
-| **6.0V** | 730 deg/s | 121 rpm | 0 kgf·cm |
-| **7.4V** | 860 deg/s | 143 rpm | 0 kgf·cm |
-| **8.4V** | 950 deg/s | 158 rpm | 0 kgf·cm |
+| **3.3V** | 420 deg/s | 70 rpm | 1.0 kgf·cm |
+| **5.0V** | 650 deg/s | 108 rpm | 2.0 kgf·cm |
+| **6.0V** | 730 deg/s | 121 rpm | 3.0 kgf·cm |
+| **7.4V** | 860 deg/s | 143 rpm | 4.0 kgf·cm |
+| **8.4V** | 950 deg/s | 158 rpm | 5.0 kgf·cm |
 
 
 ## Usage Notes
@@ -72,7 +72,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 The wiring configuration depends on whether you need feedback from the motor.
 
 * **Single Motor per Pin:** Functions requiring feedback (e.g., `read()`) support only one motor per I/O pin.
-* **Broadcast Control:** For commands that do not require feedback, multiple motors can be controlled via a single pin. These commands support broadcast control:
+* **Broadcast Control:** Commands that do not require feedback support broadcast control over a single pin:
   * `write()` (with `wait=false`)
   * `writeRotation()`
   * `stop()`
@@ -86,7 +86,6 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
 
 * **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
 * **Recommended Solutions:**
-    * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
     * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
     ```arduino
     long currentPos = myservo.read();
@@ -96,11 +95,12 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
       myservo.write(0);
     }
     ```
+    * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
 
 ### 5. Communication Characteristics & Limitations (Latency & Interrupts)
 Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
 
-* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
+* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission and reception. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
   * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
   * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
 
@@ -137,6 +137,7 @@ TekuteruServo uses the same physical wiring as standard PWM servos:
 
 ### `attach(pin)`
 Attaches the servo to the specified pin. You can attach a servo to any available digital I/O pin on your board.
+The return value can be used to confirm whether the attachment was successful.
 - **`pin`**: `uint8_t`
 - **Returns**: `bool` — `true` if the servo is connected and responding, `false` if a communication error occurs.
 
@@ -185,7 +186,7 @@ Rotates to the target angle with a specified speed and blocking behavior.
 Rotates the servo continuously at a specified speed (unit: **rpm**). The motor continues to spin until a new command is issued.
 
 - **`speed`**: Rotation speed in **rpm** (`int16_t`).
-  - **`1` to `Max`**: Forward (Counter-clockwise).
+  - **`1` to `Max`**: Forward (Counterclockwise).
   - **`-1` to `-Max`**: Reverse (Clockwise).
   - **`0`**: Stops the motor (equivalent to `stop()`).
 
@@ -204,7 +205,7 @@ The maximum speed depends on the supply voltage as follows:
 * **Range Limit:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
 * **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
-* **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to meet the target angle on time, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
+* **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to reach the target angle on schedule, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
 
 ---
 
@@ -361,7 +362,7 @@ void loop() {
 ```
 
 ### 5. Multiple Servos
-**Note:** When operating multiple servos simultaneously, using an external power supply is highly recommended to ensure stable operation and prevent voltage drops. **When using an external power supply, ensure the power supply GND is connected to both the servo GND and the Arduino GND to establish a common ground.**
+**Note:** When operating multiple servos simultaneously, an external power supply is highly recommended to ensure stable operation and prevent voltage drops — make sure to connect the power supply GND to both the servo GND and the Arduino GND to establish a common ground.
 
 ![Wiring Diagram](images/wiring_multiple.png)
 ```arduino
@@ -369,7 +370,7 @@ void loop() {
 
 TekuteruServo myservo1;
 TekuteruServo myservo2;
-// There is no software limit on the number of servos
+// No arbitrary software limit — limited only by available I/O pins and RAM
 
 void setup() {
   myservo1.attach(2);
@@ -449,6 +450,7 @@ void loop() {
 ```
 
 ### 9. Connection Check
+**Note:** Use caution when connecting multiple motors to a single pin. See [Pin Assignment](#3-pin-assignment).
 ```arduino
 #include <TekuteruServo.h>
 
@@ -461,6 +463,9 @@ void setup() {
     Serial.println("Connected");
   } else {
     Serial.println("Connection failed");  // No servo detected on pin 2
+    while (!myservo.attach(2)) { // Wait until connected
+      delay(100);
+    }
   }
 }
 
