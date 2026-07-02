@@ -57,15 +57,12 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 ## Usage Notes
 
-### 1. Power & Signal Integrity
-* **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
-
-### 2. Operational Constraints & Safety
+### 1. Operational Constraints & Safety
 * **Heat Generation:** Prolonged continuous rotation causes the motor to heat up.
 * **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
 * **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
 
-### 3. Pin Assignment
+### 2. Pin Assignment
 The wiring configuration depends on whether you need feedback from the motor.
 
 * **Single Motor per Pin:** Functions requiring feedback (e.g., `read()`) support only one motor per I/O pin.
@@ -78,7 +75,7 @@ The wiring configuration depends on whether you need feedback from the motor.
   * `setSerialSpeed()`
 * **Using `attach()` to verify the connection with multiple motors:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
 
-### 4. Startup & Calibration (Rotational Direction at Power-up)
+### 3. Startup & Calibration (Rotational Direction at Power-up)
 At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
 
 * **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
@@ -94,7 +91,7 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
     ```
     * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
 
-### 5. Communication Characteristics & Limitations (Latency & Interrupts)
+### 4. Communication Characteristics & Limitations (Latency & Interrupts)
 Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
 
 * **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission and reception. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
@@ -244,7 +241,7 @@ Sets the current absolute position (0°-359°) as the 0° reference point. This 
 ---
 
 ### `setSerialSpeed(baud)`
-Sets the communication speed. If you are using multiple servos, you must call this method for each servo instance. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
+Sets the communication speed. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
 
@@ -252,6 +249,8 @@ Sets the communication speed. If you are using multiple servos, you must call th
 
 ### `getFirmwareVersion()`
 Returns the firmware version of the connected servo.
+
+- **Current Version**: `1`
 - **Returns**: `uint8_t`
 - **Error Handling**: Returns `0` if a communication error occurs.
 
@@ -453,7 +452,7 @@ void loop() {
 ```
 
 ### 9. Connection Check
-**Note:** Use caution when connecting multiple motors to a single pin. See [Pin Assignment](#3-pin-assignment).
+**Note:** Use caution when connecting multiple motors to a single pin. See [Pin Assignment](#2-pin-assignment).
 ```arduino
 #include <TekuteruServo.h>
 
