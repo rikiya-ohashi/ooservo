@@ -35,8 +35,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 
 ## Mechanical Specifications
-* **Operating Voltage:** 3.3V - 8.4V
-  * **Note:** For 3.3V usage, see [Power & Signal Integrity](#1-power--signal-integrity).
+* **Operating Voltage:** 4.0V - 8.4V
 * **Logic Voltage:** 3.3V - 5V
 * **Max Speed:** 950 deg/s (approx. 0.063 s/60° or 158 rpm) **at 8.4V**
 * **Stall Torque:** 5.0 kgf·cm **at 8.4V**
@@ -48,19 +47,17 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 * **Lead Length:** 24 cm
 
 ### Performance Chart
-| Supply Voltage | Max Speed (deg/s) | Max Speed (rpm) | Stall Torque |
-| :--- | :--- | :--- | :--- |
-| **3.3V** | 420 deg/s | 70 rpm | 1.0 kgf·cm |
-| **5.0V** | 650 deg/s | 108 rpm | 2.0 kgf·cm |
-| **6.0V** | 730 deg/s | 121 rpm | 3.0 kgf·cm |
-| **7.4V** | 860 deg/s | 143 rpm | 4.0 kgf·cm |
-| **8.4V** | 950 deg/s | 158 rpm | 5.0 kgf·cm |
+| Supply Voltage | Max Speed ||| Stall Torque |
+| :--- | ---: | ---: | ---: | ---: |
+| **5.0V** | 650 deg/s | 108 rpm | 0.0923 s/60° | 2.0 kgf·cm |
+| **6.0V** | 730 deg/s | 121 rpm | 0.0822 s/60° | 3.0 kgf·cm |
+| **7.4V** | 860 deg/s | 143 rpm | 0.0698 s/60° | 4.0 kgf·cm |
+| **8.4V** | 950 deg/s | 158 rpm | 0.0632 s/60° | 5.0 kgf·cm |
 
 
 ## Usage Notes
 
 ### 1. Power & Signal Integrity
-* **Power Supply:** The 3.3V output pins on boards like Arduino Uno or ESP32 often lack sufficient current capacity. Always use a stable external power source.
 * **Noise Reduction:** Adding a large capacitor (e.g., 1000μF or higher) across the power lines can further improve stability.
 
 ### 2. Operational Constraints & Safety
@@ -134,6 +131,7 @@ TekuteruServo uses the same physical wiring as standard PWM servos:
 
 
 ## Class Methods
+> **Note:** You must call `attach()` before using any of the methods listed below.
 
 ### `attach(pin)`
 Attaches the servo to the specified pin. You can attach a servo to any available digital I/O pin on your board.
@@ -160,7 +158,6 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 
 | Supply Voltage | Max `speed` Value | Maximum Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **420** | 420 deg/s |
 | **5.0V** | **650** | 650 deg/s |
 | **6.0V** | **730** | 730 deg/s |
 | **7.4V** | **860** | 860 deg/s |
@@ -195,7 +192,6 @@ The maximum speed depends on the supply voltage as follows:
 
 | Supply Voltage | Max `speed` Value | Max Speed |
 | :--- | :--- | :--- |
-| **3.3V** | **70** | 70 rpm |
 | **5.0V** | **108** | 108 rpm |
 | **6.0V** | **121** | 121 rpm |
 | **7.4V** | **143** | 143 rpm |
@@ -248,9 +244,16 @@ Sets the current absolute position (0°-359°) as the 0° reference point. This 
 ---
 
 ### `setSerialSpeed(baud)`
-Sets the communication speed. This must be called after `attach()`. If you are using multiple servos, you must call this method for each servo instance. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
+Sets the communication speed. If you are using multiple servos, you must call this method for each servo instance. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
+
+---
+
+### `getFirmwareVersion()`
+Returns the firmware version of the connected servo.
+- **Returns**: `uint8_t`
+- **Error Handling**: Returns `0` if a communication error occurs.
 
 
 ## Code Examples
