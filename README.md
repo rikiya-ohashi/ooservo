@@ -2,7 +2,9 @@
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers virtually unlimited rotation and precise position control.
 
-Key features include multi-turn positioning (±5.96 million rotations), ±1° angular accuracy, and real-time position feedback. It maintains the same physical dimensions and wiring as the SG90, while providing an interface compatible with the standard Arduino Servo library.
+It delivers multi-turn positioning (±5.96 million rotations) with ±1° angular accuracy and real-time position feedback, all while providing an interface compatible with the standard Arduino Servo library.
+
+The internal firmware is completely open to customization—you can easily reflash or update the servo's program using just a single Arduino board.
 
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard PWM servos. This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
@@ -21,6 +23,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 - [Installation](#installation-arduino-ide)
 - [Class Methods](#class-methods)
 - [Code Examples](#code-examples)
+- [Firmware Customization](#firmware-customization)
 
 
 ## Features
@@ -32,6 +35,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 * **Scalable Servo Control:** No arbitrary software limit on the number of servos. The practical limit is determined by your board's available I/O pins and RAM.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
+* **Open & Reprogrammable:** Supports direct firmware flashing using a standard Arduino board as a programmer—no dedicated hardware tools required.
 
 
 ## Mechanical Specifications
@@ -58,9 +62,9 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ## Usage Notes
 
 ### 1. Operational Constraints & Safety
-* **Heat Generation:** Prolonged continuous rotation causes the motor to heat up.
+* **Heat Generation:** Extended periods of continuous rotation can cause the motor to heat up.
 * **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
-* **Physical Care:** The internal wiring is delicate; applying excessive force or tension may result in broken or damaged wires.
+* **Physical Care:** The internal wiring is delicate — avoid applying excessive force or tension to the leads.
 
 ### 2. Pin Assignment
 The wiring configuration depends on whether you need feedback from the motor.
@@ -73,9 +77,9 @@ The wiring configuration depends on whether you need feedback from the motor.
   * `setHold()`
   * `setZero()`
   * `setSerialSpeed()`
-* **Using `attach()` to verify the connection with multiple motors:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
+* **Verifying Connections When Multiple Motors Share a Pin:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
 
-### 3. Startup & Calibration (Rotational Direction at Power-up)
+### 3. Startup & Calibration (Rotational Direction at Power-Up)
 At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
 
 * **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
@@ -97,9 +101,7 @@ Since TekuteruServo uses a software-based bit-banging serial protocol on a singl
 * **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission and reception. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
   * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
   * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
-
-* **Communication Latency:** Communicating at 9600 baud introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
-
+* **Communication Latency:** Because TekuteruServo uses software-based serial communication, it introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
 * **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed()` to reduce the **blocking duration**.
 
 
@@ -140,7 +142,7 @@ The return value can be used to confirm whether the attachment was successful.
 
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed (non-blocking).
-Upon power-up, the current position is mapped to the 0°–359° range. For details, see [Startup & Calibration](#4-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
+Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#4-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
 
 ---
@@ -163,7 +165,6 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 **Note on Speed Accuracy:**
 * **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
-* **Timing Variance:** Due to this variance and power supply stability, the time taken to reach the target angle may differ from theoretical calculations.
 
 ---
 
@@ -279,7 +280,30 @@ void loop() {
 }
 ```
 
-### 2. Speed Control
+### 2. Connection Check
+```arduino
+#include <TekuteruServo.h>
+
+TekuteruServo myservo;
+
+void setup() {
+  Serial.begin(9600);  // Start serial communication (set the serial monitor to 9600 baud)
+
+  if (myservo.attach(2)) {
+    Serial.println("Connected");
+  } else {
+    Serial.println("Connection failed");  // No servo detected on pin 2
+    while (!myservo.attach(2)) {          // Wait until connected
+      delay(100);
+    }
+  }
+}
+
+void loop() {
+}
+```
+
+### 3. Speed Control
 ```arduino
 #include <TekuteruServo.h>
 
@@ -298,7 +322,7 @@ void loop() {
 }
 ```
 
-### 3. Wait for Movement to Complete
+### 4. Wait for Movement to Complete
 ```arduino
 #include <TekuteruServo.h>
 
@@ -314,11 +338,11 @@ void loop() {
   myservo.write(180, 600, true);  // Move to 180°, wait for completion (within ±1°)
 
   // Blocking approach 2: call wait() separately
-  myservo.write(-180, 600);  // Start moving to -180°
-  myservo.wait();            // Wait until motor reaches -180°
+  myservo.write(-180);  // Start moving to -180°
+  myservo.wait();       // Wait until motor reaches -180°
 
   // Non-blocking: program continues while the motor is moving
-  myservo.write(720, 600);       // Start moving to 720°
+  myservo.write(720);           // Start moving to 720°
   while (myservo.isMoving()) {  // Do other work while the motor is moving
     // Example: LED blink
     digitalWrite(LED_BUILTIN, HIGH);
@@ -329,7 +353,7 @@ void loop() {
 }
 ```
 
-### 4. Read the Current Angle
+### 5. Read the Current Angle
 ```arduino
 #include <TekuteruServo.h>
 
@@ -363,7 +387,7 @@ void loop() {
 }
 ```
 
-### 5. Multiple Servos
+### 6. Multiple Servos
 **Note:** When operating multiple servos simultaneously, an external power supply is highly recommended to ensure stable operation and prevent voltage drops — make sure to connect the power supply GND to both the servo GND and the Arduino GND to establish a common ground.
 
 ![Wiring Diagram](images/wiring_multiple.png)
@@ -392,7 +416,7 @@ void loop() {
 }
 ```
 
-### 6. Continuous Rotation
+### 7. Continuous Rotation
 ```arduino
 #include <TekuteruServo.h>
 
@@ -414,7 +438,7 @@ void loop() {
 }
 ```
 
-### 7. Set Zero
+### 8. Set Zero
 ```arduino
 #include <TekuteruServo.h>
 
@@ -433,7 +457,7 @@ void loop() {
 }
 ```
 
-### 8. Set Serial Speed
+### 9. Set Serial Speed
 ```arduino
 #include <TekuteruServo.h>
 
@@ -451,29 +475,41 @@ void loop() {
 }
 ```
 
-### 9. Connection Check
-**Note:** Use caution when connecting multiple motors to a single pin. See [Pin Assignment](#2-pin-assignment).
-```arduino
-#include <TekuteruServo.h>
 
-TekuteruServo myservo;
+## Firmware Customization
 
-void setup() {
-  Serial.begin(9600);
+The internal program that controls the servo motor is located in `firmware/TekuteruServo_firmware/TekuteruServo_firmware.ino`.
+If you have a single Arduino board, you can easily rewrite and customize the servo's internal firmware.
 
-  if (myservo.attach(2)) {
-    Serial.println("Connected");
-  } else {
-    Serial.println("Connection failed");  // No servo detected on pin 2
-    while (!myservo.attach(2)) { // Wait until connected
-      delay(100);
-    }
-  }
-}
+### Prerequisites
 
-void loop() {
-}
-```
+1. **megaTinyCore:** Install this via the Arduino IDE Board Manager.
+2. **jtag2updi:** Download this sketch from [ElTangas/jtag2updi](https://github.com/ElTangas/jtag2updi).
+   * Upload the `jtag2updi` sketch to your Arduino. Your Arduino is now ready to act as a UPDI programmer.
+
+### Wiring
+
+Remove the four screws from the bottom of the servo and take off the lower cover to access the internal board. Connect your programmer Arduino to the servo as follows:
+
+| Arduino Pin | Servo Connection |
+| :--- | :--- |
+| **5V** | VCC |
+| **GND** | GND |
+| **D6** (Arduino Uno) | Programming pad (UPDI) |
+
+**Note:** Insert a jumper pin into the designated programming pad and ensure it makes firm, steady contact. The 4.7kΩ UPDI resistor is built-in, so no external resistor is needed.
+
+![Firmware Flashing Diagram](images/firmware_flash.png)
+
+### Flashing the Firmware
+
+1. Open `TekuteruServo_firmware.ino` (or your customized sketch) in the Arduino IDE.
+2. Configure the following settings under the **Tools** menu:
+   * **Board:** `ATtiny3226/3216/1626/1616/...` > `ATtiny1616`
+   * **Programmer:** `jtag2updi`
+   * **Port:** Select the COM port associated with your programmer Arduino.
+3. Hold the jumper pin firmly against the programming pad to ensure a secure connection.
+4. While maintaining contact, click **Sketch** > **Upload Using Programmer** in the Arduino IDE to flash the firmware.
 
 
 ## Support & Feedback
