@@ -4,7 +4,7 @@ TekuteruServo is a serial servo motor that feels just like a standard SG90 but o
 
 It delivers multi-turn positioning (±5.96 million rotations) with ±1° angular accuracy and real-time position feedback, all while providing an interface compatible with the standard Arduino Servo library.
 
-The internal firmware is completely open to customization—you can easily reflash or update the servo's program using just a single Arduino board.
+The internal firmware is completely open to customization — you can easily reflash or update the servo's program using just a single Arduino board.
 
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard PWM servos. This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
@@ -27,20 +27,20 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 
 ## Features
-* **High-Precision Multi-turn Positioning:** Supports ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
+* **High-Precision Multi-Turn Positioning:** Supports ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
 * **Dual-Mode Operation:** Supports both angle control and continuous rotation (speed control).
 * **Adjustable Speed:** Rotation speed is adjustable from 1 to 950 deg/s.
 * **Real-Time Position Feedback:** Returns the current angle at any time via `read()`.
 * **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
 * **Scalable Servo Control:** No arbitrary software limit on the number of servos. The practical limit is determined by your board's available I/O pins and RAM.
 * **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
-* **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V–5V) as the SG90.
-* **Open & Reprogrammable:** Supports direct firmware flashing using a standard Arduino board as a programmer—no dedicated hardware tools required.
+* **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V-5V) as the SG90.
+* **Open & Reprogrammable:** Supports direct firmware flashing using a standard Arduino board as a programmer — no dedicated hardware tools required.
 
 
 ## Mechanical Specifications
-* **Operating Voltage:** 4.0V - 8.4V
-* **Logic Voltage:** 3.3V - 5V
+* **Operating Voltage:** 4.0V-8.4V
+* **Logic Voltage:** 3.3V-5V
 * **Max Speed:** 950 deg/s (approx. 0.063 s/60° or 158 rpm) **at 8.4V**
 * **Stall Torque:** 5.0 kgf·cm **at 8.4V**
 * **Stall Current:** 800 mA
@@ -86,8 +86,8 @@ At power-up, the servo detects its absolute position (0°-359°), but the multi-
 * **Recommended Solutions:**
     * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
     ```arduino
-    long currentPos = myservo.read();
-    if (currentPos > 300) {
+    long currentAngle = myservo.read();
+    if (currentAngle > 300) {
       myservo.write(360); // Move forward to 360° instead of back to 0°
     } else {
       myservo.write(0);
@@ -130,7 +130,6 @@ TekuteruServo uses the same physical wiring as standard PWM servos:
 
 
 ## Class Methods
-> **Note:** You must call `attach()` before using any of the methods listed below.
 
 ### `attach(pin)`
 Attaches the servo to the specified pin. You can attach a servo to any available digital I/O pin on your board.
@@ -138,11 +137,13 @@ The return value can be used to confirm whether the attachment was successful.
 - **`pin`**: `uint8_t`
 - **Returns**: `bool` — `true` if the servo is connected and responding, `false` if a communication error occurs.
 
+> **Note:** You must call `attach()` before using any of the other methods below.
+
 ---
 
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed (non-blocking).
-Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#4-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
+Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#3-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
 
 ---
@@ -162,9 +163,10 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 | **7.4V** | **860** | 860 deg/s |
 | **8.4V** | **950** | 950 deg/s |
 
-**Note on Speed Accuracy:**
+**Note on Speed Stability:**
 * **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
+* **Load Handling:** If external load slows the motor down during rotation, it will accelerate afterward to make up for the delay, so the target angle is still reached on schedule.
 
 ---
 
@@ -179,6 +181,8 @@ Rotates to the target angle with a specified speed and blocking behavior.
 
 ### `writeRotation(speed)`
 Rotates the servo continuously at a specified speed (unit: **rpm**). The motor continues to spin until a new command is issued.
+
+**Note:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
 
 - **`speed`**: Rotation speed in **rpm** (`int16_t`).
   - **`1` to `Max`**: Forward (Counterclockwise).
@@ -196,10 +200,9 @@ The maximum speed depends on the supply voltage as follows:
 | **8.4V** | **158** | 158 rpm |
 
 **Note on Speed Stability:**
-* **Range Limit:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
 * **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 * **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
-* **Load Handling:** Unlike `write()`, which recovers from slowdowns by accelerating to reach the target angle on schedule, `writeRotation()` simply maintains the set speed — it will not accelerate to compensate for time lost under load.
+* **Load Handling:** If external load slows the motor down during rotation, it will simply maintain the set speed afterward — it will not accelerate to compensate for the time lost due to the load.
 
 ---
 
@@ -387,7 +390,29 @@ void loop() {
 }
 ```
 
-### 6. Multiple Servos
+### 6. Continuous Rotation
+```arduino
+#include <TekuteruServo.h>
+
+TekuteruServo myservo;
+
+void setup() {
+  myservo.attach(2);
+}
+
+void loop() {
+  myservo.writeRotation(100);  // Rotate forward at 100 rpm
+  delay(3000);
+
+  myservo.writeRotation(-50);  // Rotate in reverse at 50 rpm
+  delay(3000);
+
+  myservo.writeRotation(0);  // Stop (same as calling stop())
+  delay(2000);
+}
+```
+
+### 7. Multiple Servos
 **Note:** When operating multiple servos simultaneously, an external power supply is highly recommended to ensure stable operation and prevent voltage drops — make sure to connect the power supply GND to both the servo GND and the Arduino GND to establish a common ground.
 
 ![Wiring Diagram](images/wiring_multiple.png)
@@ -413,28 +438,6 @@ void loop() {
   myservo2.write(-180, 300);
   myservo1.wait();
   myservo2.wait();
-}
-```
-
-### 7. Continuous Rotation
-```arduino
-#include <TekuteruServo.h>
-
-TekuteruServo myservo;
-
-void setup() {
-  myservo.attach(2);
-}
-
-void loop() {
-  myservo.writeRotation(100);  // Rotate forward at 100 rpm
-  delay(3000);
-
-  myservo.writeRotation(-50);  // Rotate in reverse at 50 rpm
-  delay(3000);
-
-  myservo.writeRotation(0);  // Stop (same as calling stop())
-  delay(2000);
 }
 ```
 
@@ -483,8 +486,12 @@ If you have a single Arduino board, you can easily rewrite and customize the ser
 
 ### Prerequisites
 
-1. **megaTinyCore:** Install this via the Arduino IDE Board Manager.
-2. **jtag2updi:** Download this sketch from [ElTangas/jtag2updi](https://github.com/ElTangas/jtag2updi).
+1. **Add megaTinyCore to the Board Manager:** In the Arduino IDE, open **File > Preferences**, then paste the following URL into the **Additional Boards Manager URLs** field:
+```
+   http://drazzy.com/package_drazzy.com_index.json
+```
+2. **megaTinyCore:** Install this via the Arduino IDE Board Manager.
+3. **jtag2updi:** Download this sketch from [SpenceKonde/jtag2updi](https://github.com/SpenceKonde/jtag2updi).
    * Upload the `jtag2updi` sketch to your Arduino. Your Arduino is now ready to act as a UPDI programmer.
 
 ### Wiring
