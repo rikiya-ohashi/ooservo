@@ -59,10 +59,6 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 | **7.4V** | 860 deg/s | 143 rpm | 0.0698 s/60° | 4.0 kgf·cm |
 | **8.4V** | 950 deg/s | 158 rpm | 0.0632 s/60° | 5.0 kgf·cm |
 
-### Speed Notes
-* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
-* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
-
 
 ## Python Support (Raspberry Pi)
 For users who want to control TekuteruServo with Python on a Raspberry Pi, see the dedicated Python library:
@@ -122,8 +118,10 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 | **7.4V** | **860** | 860 deg/s |
 | **8.4V** | **950** | 950 deg/s |
 
-**Note on Speed Stability:**
+**Speed Behavior Notes:**
 * **Load Handling:** If external load slows the motor down during rotation, it will accelerate afterward to make up for the delay, so the target angle is still reached on schedule.
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
+* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 
 ---
 
@@ -156,8 +154,10 @@ The maximum speed depends on the supply voltage as follows:
 | **7.4V** | **143** | 143 rpm |
 | **8.4V** | **158** | 158 rpm |
 
-**Note on Speed Stability:**
+**Speed Behavior Notes:**
 * **Load Handling:** If external load slows the motor down during rotation, it will simply maintain the set speed afterward — it will not accelerate to compensate for the time lost due to the load.
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
+* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 
 ---
 
@@ -300,6 +300,7 @@ void setup() {
     while (!myservo.attach(2)) {          // Wait until connected
       delay(100);
     }
+    Serial.println("Connected");
   }
 }
 
