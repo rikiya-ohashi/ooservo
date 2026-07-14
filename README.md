@@ -4,7 +4,7 @@ TekuteruServo is a serial servo motor that feels just like a standard SG90 but o
 
 It delivers multi-turn positioning (±5.96 million rotations) with ±1° angular accuracy and real-time position feedback, all while providing an interface compatible with the standard Arduino Servo library.
 
-The internal firmware is completely open to customization — you can easily reflash or update the servo's program using just a single Arduino board.
+The internal firmware is completely open to customization — you can easily update the servo's program using just a single Arduino board.
 
 > **⚠ Important Compatibility Note:**
 > This library uses a dedicated serial protocol. It is **not** a PWM-based servo library and is **incompatible** with standard PWM servos. This incompatibility goes both ways — the standard Servo.h library cannot control TekuteruServo either.
@@ -17,13 +17,14 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ## Table of Contents
 - [Features](#features)
 - [Mechanical Specifications](#mechanical-specifications)
-- [Usage Notes](#usage-notes)
 - [Python Support (Raspberry Pi)](#python-support-raspberry-pi)
 - [Wiring Guide](#wiring-guide)
-- [Installation](#installation-arduino-ide)
+- [Installation (Arduino IDE)](#installation-arduino-ide)
 - [Class Methods](#class-methods)
+- [Usage Notes](#usage-notes)
 - [Code Examples](#code-examples)
 - [Firmware Customization](#firmware-customization)
+- [Support & Feedback](#support--feedback)
 
 
 ## Features
@@ -31,10 +32,10 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 * **Dual-Mode Operation:** Supports both angle control and continuous rotation (speed control).
 * **Adjustable Speed:** Rotation speed is adjustable from 1 to 950 deg/s.
 * **Real-Time Position Feedback:** Returns the current angle at any time via `read()`.
-* **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
-* **Scalable Servo Control:** No arbitrary software limit on the number of servos. The practical limit is determined by your board's available I/O pins and RAM.
-* **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including **Arduino, ESP32, Raspberry Pi Pico,** and more.
 * **Seamless Integration:** Uses the same wiring, form factor, and logic voltage (3.3V-5V) as the SG90.
+* **Servo-Library-Compatible Interface:** Provides `attach()` and `write()` methods that are API-compatible with the standard Arduino Servo library.
+* **Universal Compatibility:** Compatible with any digital I/O pin on a wide range of microcontrollers, including Arduino, ESP32, Raspberry Pi Pico, and more.
+* **Scalable Servo Control:** No arbitrary software limit on the number of servos. The practical limit is determined by your board's available I/O pins and RAM.
 * **Open & Reprogrammable:** Supports direct firmware flashing using a standard Arduino board as a programmer — no dedicated hardware tools required.
 
 
@@ -58,51 +59,9 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 | **7.4V** | 860 deg/s | 143 rpm | 0.0698 s/60° | 4.0 kgf·cm |
 | **8.4V** | 950 deg/s | 158 rpm | 0.0632 s/60° | 5.0 kgf·cm |
 
-
-## Usage Notes
-
-### 1. Operational Constraints & Safety
-* **Heat Generation:** Extended periods of continuous rotation can cause the motor to heat up.
-* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
-* **Physical Care:** The internal wiring is delicate — avoid applying excessive force or tension to the leads.
-
-### 2. Pin Assignment
-The wiring configuration depends on whether you need feedback from the motor.
-
-* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()`) support only one motor per I/O pin.
-* **Broadcast Control:** Commands that do not require feedback support broadcast control over a single pin:
-  * `write()` (with `wait=false`)
-  * `writeRotation()`
-  * `stop()`
-  * `setHold()`
-  * `setZero()`
-  * `setSerialSpeed()`
-* **Verifying Connections When Multiple Motors Share a Pin:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
-
-### 3. Startup & Calibration (Rotational Direction at Power-Up)
-At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
-
-* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
-* **Recommended Solutions:**
-    * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
-    ```arduino
-    long currentAngle = myservo.read();
-    if (currentAngle > 300) {
-      myservo.write(360); // Move forward to 360° instead of back to 0°
-    } else {
-      myservo.write(0);
-    }
-    ```
-    * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
-
-### 4. Communication Characteristics & Limitations (Latency & Interrupts)
-Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
-
-* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission and reception. At the default baud rate of 9600 bps, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
-  * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
-  * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
-* **Communication Latency:** Because TekuteruServo uses software-based serial communication, it introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
-* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed()` to reduce the **blocking duration**.
+### Speed Notes
+* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
+* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
 
 
 ## Python Support (Raspberry Pi)
@@ -143,7 +102,7 @@ The return value can be used to confirm whether the attachment was successful.
 
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed (non-blocking).
-Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#3-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
+Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#2-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
 - **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
 
 ---
@@ -164,8 +123,6 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 | **8.4V** | **950** | 950 deg/s |
 
 **Note on Speed Stability:**
-* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
-* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Load Handling:** If external load slows the motor down during rotation, it will accelerate afterward to make up for the delay, so the target angle is still reached on schedule.
 
 ---
@@ -200,8 +157,6 @@ The maximum speed depends on the supply voltage as follows:
 | **8.4V** | **158** | 158 rpm |
 
 **Note on Speed Stability:**
-* **Low-Speed Smoothness:** At low speeds under no load, rotation may become irregular or jerky.
-* **Speed Variance:** The actual rotation speed may vary by up to ±5% from the specified value due to unit-to-unit variation.
 * **Load Handling:** If external load slows the motor down during rotation, it will simply maintain the set speed afterward — it will not accelerate to compensate for the time lost due to the load.
 
 ---
@@ -257,6 +212,52 @@ Returns the firmware version of the connected servo.
 - **Current Version**: `1`
 - **Returns**: `uint8_t`
 - **Error Handling**: Returns `0` if a communication error occurs.
+
+
+## Usage Notes
+
+### 1. Operational Constraints & Safety
+* **Heat Generation:** Extended periods of continuous rotation can cause the motor to heat up.
+* **Magnetic Interference:** Do not use the motor near strong magnetic fields (e.g., large magnets, high-current cables), as they may interfere with the internal magnetic encoder.
+* **Physical Care:** The internal wiring is delicate — avoid applying excessive force or tension to the leads.
+
+### 2. Startup & Calibration (Rotational Direction at Power-Up)
+At power-up, the servo detects its absolute position (0°-359°), but the multi-turn counter resets to zero. This can cause the motor to rotate in an unexpected direction if the home position is near the 0°/360° wraparound point.
+
+* **The Rotation Issue:** If the motor is physically at 359° at startup and you command `write(0)`, the library targets "0° in the current revolution." To reach this, the motor will rotate **359° backward** instead of moving forward just 1°.
+* **Recommended Solutions:**
+    * **Startup Logic:** Read the current position immediately after power-up and move the servo to the nearest target.
+    ```arduino
+    long currentAngle = myservo.read();
+    if (currentAngle > 300) {
+      myservo.write(360); // Move forward to 360° instead of back to 0°
+    } else {
+      myservo.write(0);
+    }
+    ```
+    * **Calibration:** Use `setZero()` once to calibrate your physical home position to 0°. This is saved in non-volatile memory and persists after power cycles.
+
+### 3. Pin Assignment
+The wiring configuration depends on whether you need feedback from the motor.
+
+* **Single Motor per Pin:** Functions requiring feedback (e.g., `read()`) support only one motor per I/O pin.
+* **Broadcast Control:** Commands that do not require feedback support broadcast control over a single pin:
+  * `write()` (with `wait=false`)
+  * `writeRotation()`
+  * `stop()`
+  * `setHold()`
+  * `setZero()`
+  * `setSerialSpeed()`
+* **Verifying Connections When Multiple Motors Share a Pin:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
+
+### 4. Communication Characteristics & Limitations (Latency & Interrupts)
+Since TekuteruServo uses a software-based bit-banging serial protocol on a single pin, it has specific characteristics regarding communication speed and system overhead:
+
+* **Interrupt Blocking during Communication:** To ensure precise timing for the signal pulses, global interrupts are temporarily disabled (`noInterrupts()`) during data transmission and reception. At the default baud rate of 9600 baud, sending or receiving a command may block interrupts for **several milliseconds**. Frequent communication within a tight loop will worsen this blocking. This can potentially cause:
+  * Slight drifting or inaccuracies in time-tracking functions like `millis()` or `micros()`.
+  * Missed data or timing issues in other interrupt-driven libraries (such as SoftwareSerial, I2C, or hardware timers).
+* **Communication Latency:** Because TekuteruServo uses software-based serial communication, it introduces **response latency** compared to PWM-based servos or high-performance hardware serial servos.
+* **How to Mitigate:** If your application requires strict real-time interrupt processing or lower latency, consider increasing the communication speed using `setSerialSpeed()` to reduce the **blocking duration**.
 
 
 ## Code Examples
@@ -487,9 +488,10 @@ If you have a single Arduino board, you can easily rewrite and customize the ser
 ### Prerequisites
 
 1. **Add megaTinyCore to the Board Manager:** In the Arduino IDE, open **File > Preferences**, then paste the following URL into the **Additional Boards Manager URLs** field:
-```
+
+   ```
    http://drazzy.com/package_drazzy.com_index.json
-```
+   ```
 2. **megaTinyCore:** Install this via the Arduino IDE Board Manager.
 3. **jtag2updi:** Download this sketch from [SpenceKonde/jtag2updi](https://github.com/SpenceKonde/jtag2updi).
    * Upload the `jtag2updi` sketch to your Arduino. Your Arduino is now ready to act as a UPDI programmer.
