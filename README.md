@@ -11,7 +11,7 @@ The internal firmware is completely open to customization — you can easily upd
 
 **The TekuteruServo hardware can be purchased here:** [**Buy TekuteruServo**](https://tekuteru.handcrafted.jp/items/121327019)
 
-For questions about TekuteruServo, you can chat with an **AI assistant** via [NotebookLM](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
+For questions about TekuteruServo, you can chat with an **AI assistant** via [Gemini Notebook](https://notebooklm.google.com/notebook/272725f0-6a1c-4c52-9597-6384a2f88f91).
 
 
 ## Table of Contents
@@ -28,7 +28,7 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 
 
 ## Features
-* **High-Precision Multi-Turn Positioning:** Supports ±5.96 million rotations (-2,147,483,647° to +2,147,483,647°) with ±1° accuracy.
+* **High-Precision Multi-Turn Positioning:** Supports ±5.96 million rotations (-2,147,483,648° to +2,147,483,647°) with ±1° accuracy.
 * **Dual-Mode Operation:** Supports both angle control and continuous rotation (speed control).
 * **Adjustable Speed:** Rotation speed is adjustable from 1 to 950 deg/s.
 * **Real-Time Position Feedback:** Returns the current angle at any time via `read()`.
@@ -54,10 +54,10 @@ For questions about TekuteruServo, you can chat with an **AI assistant** via [No
 ### Performance Chart
 | Supply Voltage | Max Speed ||| Stall Torque |
 | :--- | ---: | ---: | ---: | ---: |
-| **5.0V** | 650 deg/s | 108 rpm | 0.0923 s/60° | 2.0 kgf·cm |
-| **6.0V** | 730 deg/s | 121 rpm | 0.0822 s/60° | 3.0 kgf·cm |
-| **7.4V** | 860 deg/s | 143 rpm | 0.0698 s/60° | 4.0 kgf·cm |
-| **8.4V** | 950 deg/s | 158 rpm | 0.0632 s/60° | 5.0 kgf·cm |
+| **5.0V** | 650 deg/s | 108 rpm | 0.093 s/60° | 1 kgf·cm |
+| **6.0V** | 760 deg/s | 126 rpm | 0.079 s/60° | 2 kgf·cm |
+| **7.4V** | 870 deg/s | 145 rpm | 0.069 s/60° | 3 kgf·cm |
+| **8.4V** | 910 deg/s | 151 rpm | 0.066 s/60° | 4 kgf·cm |
 
 
 ## Python Support (Raspberry Pi)
@@ -99,7 +99,7 @@ The return value can be used to confirm whether the attachment was successful.
 ### `write(angle)`
 Rotates the servo to a specific target angle at maximum speed (non-blocking).
 Upon power-up, the current position is mapped to the 0°-359° range. For details, see [Startup & Calibration](#2-startup--calibration-rotational-direction-at-power-up) in the Usage Notes.
-- **`angle`**: `int32_t` (Range: `-2,147,483,647` to `2,147,483,647`)
+- **`angle`**: `int32_t` (Range: `-2,147,483,648` to `+2,147,483,647`)
 
 ---
 
@@ -114,9 +114,9 @@ Rotates to the target angle at a specified speed (unit: **deg/s**).
 | Supply Voltage | Max `speed` Value | Maximum Speed |
 | :--- | :--- | :--- |
 | **5.0V** | **650** | 650 deg/s |
-| **6.0V** | **730** | 730 deg/s |
-| **7.4V** | **860** | 860 deg/s |
-| **8.4V** | **950** | 950 deg/s |
+| **6.0V** | **760** | 760 deg/s |
+| **7.4V** | **870** | 870 deg/s |
+| **8.4V** | **910** | 910 deg/s |
 
 **Speed Behavior Notes:**
 * **Load Handling:** If external load slows the motor down during rotation, it will accelerate afterward to make up for the delay, so the target angle is still reached on schedule.
@@ -137,7 +137,7 @@ Rotates to the target angle with a specified speed and blocking behavior.
 ### `writeRotation(speed)`
 Rotates the servo continuously at a specified speed (unit: **rpm**). The motor continues to spin until a new command is issued.
 
-**Note:** The motor cannot rotate outside the range of `-2,147,483,647°` to `+2,147,483,647°`.
+**Note:** The motor cannot rotate outside the range of `-2,147,483,648°` to `+2,147,483,647°`.
 
 - **`speed`**: Rotation speed in **rpm** (`int16_t`).
   - **`1` to `Max`**: Forward (Counterclockwise).
@@ -150,9 +150,9 @@ The maximum speed depends on the supply voltage as follows:
 | Supply Voltage | Max `speed` Value | Max Speed |
 | :--- | :--- | :--- |
 | **5.0V** | **108** | 108 rpm |
-| **6.0V** | **121** | 121 rpm |
-| **7.4V** | **143** | 143 rpm |
-| **8.4V** | **158** | 158 rpm |
+| **6.0V** | **126** | 126 rpm |
+| **7.4V** | **145** | 145 rpm |
+| **8.4V** | **151** | 151 rpm |
 
 **Speed Behavior Notes:**
 * **Load Handling:** If external load slows the motor down during rotation, it will simply maintain the set speed afterward — it will not accelerate to compensate for the time lost due to the load.
@@ -161,10 +161,10 @@ The maximum speed depends on the supply voltage as follows:
 
 ---
 
-### `read()`
+### `read(&hasError)`
 Returns the current angle in degrees.
 - **Returns**: `int32_t`
-- **Error Handling**: Returns `-2,147,483,648` if a communication error occurs.
+- **Error Handling**: Pass a pointer to a `bool` variable as `hasError` to receive the communication status — it is set to `true` if a communication error occurs, `false` otherwise. In that case, the return value is `-2,147,483,648`.
 
 ---
 
@@ -178,10 +178,10 @@ Blocks execution until the current movement is completed (until the motor reache
 
 ---
 
-### `isMoving()`
+### `isMoving(&hasError)`
 Returns `true` if the servo is currently rotating, and `false` if it is stopped.
 - **Returns**: `bool`
-- **Error Handling**: Also returns `false` if a communication error occurs.
+- **Error Handling**: Pass a pointer to a `bool` variable as `hasError` to receive the communication status — it is set to `true` if a communication error occurs, `false` otherwise. In that case, the return value is `false`.
 
 ---
 
@@ -202,6 +202,7 @@ Sets the current absolute position (0°-359°) as the 0° reference point. This 
 ### `setSerialSpeed(baud)`
 Sets the communication speed. The speed resets to **9600 baud** after each power cycle. Ongoing rotations will stop when this is called.
 - **`baud`**: `uint16_t` (Select from: `9600`, `19200`, `38400`, `57600`)
+- **Returns**: `bool` — `true` if the change was applied successfully, `false` if a communication error occurs or an invalid `baud` value is specified.
 - **Note:** Increasing the baud rate may cause communication errors, particularly affecting the reliability of `read()` operations.
 
 ---
@@ -247,7 +248,6 @@ The wiring configuration depends on whether you need feedback from the motor.
   * `stop()`
   * `setHold()`
   * `setZero()`
-  * `setSerialSpeed()`
 * **Verifying Connections When Multiple Motors Share a Pin:** When multiple motors share a pin, `attach()` can only confirm whether *at least one* motor is responding — it cannot determine the exact number of connected motors.
 
 ### 4. Communication Characteristics & Limitations (Latency & Interrupts)
@@ -488,8 +488,7 @@ If you have a single Arduino board, you can easily rewrite and customize the ser
 
 ### Prerequisites
 
-1. **Add megaTinyCore to the Board Manager:** In the Arduino IDE, open **File > Preferences**, then paste the following URL into the **Additional Boards Manager URLs** field:
-
+1. **Boards Manager URL:** In the Arduino IDE, open **File > Preferences**, then paste the following URL into the **Additional Boards Manager URLs** field:
    ```
    http://drazzy.com/package_drazzy.com_index.json
    ```
