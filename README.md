@@ -1,3 +1,5 @@
+[English] | [日本語](README.ja.md)
+
 # TekuteruServo
 
 TekuteruServo is a serial servo motor that feels just like a standard SG90 but offers virtually unlimited rotation and precise position control.
